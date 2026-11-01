@@ -72,6 +72,8 @@ export class RadioEngine {
   private retryAttempts = 0;
   /** We paused or only cued because the listener couldn't see the player; playback resumes once they can. */
   private heldForVisibility = false;
+  /** Set by tuneIn(): the first start answers the listener's click, it is not an automatic playback. */
+  private startRequested = false;
   private visibleRatio = 1;
   private observer: IntersectionObserver | null = null;
   private hasPlayed = false;
@@ -110,6 +112,7 @@ export class RadioEngine {
     }
     this.active = true;
     this.host = host;
+    this.startRequested = true;
     this.setStatus("connecting");
     document.addEventListener("visibilitychange", this.handleVisibility);
     this.observeHost(host);
@@ -137,6 +140,7 @@ export class RadioEngine {
     this.retryKey = null;
     this.retryAttempts = 0;
     this.heldForVisibility = false;
+    this.startRequested = false;
     this.hasPlayed = false;
     this.lastCorrectionAt = Number.NEGATIVE_INFINITY;
     this.setStatus("off");
@@ -245,7 +249,7 @@ export class RadioEngine {
         height: "100%",
         videoId: slot.track.id,
         playerVars: {
-          autoplay: this.mayAutoplay() ? 1 : 0,
+          autoplay: this.mayStartNow() ? 1 : 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -302,7 +306,10 @@ export class RadioEngine {
     this.ready = true;
     this.readyTimer = clearTimer(this.readyTimer);
     this.applyVolume();
-    if (this.mayAutoplay()) {
+    const mayStart = this.mayStartNow();
+    // Only the first player answers the click; a retried one follows the rules for automatic playback.
+    this.startRequested = false;
+    if (mayStart) {
       this.resumeLive();
     } else {
       const now = this.now();
@@ -567,6 +574,14 @@ export class RadioEngine {
   }
 
   // --- Helpers -----------------------------------------------------------------------------
+
+  /**
+   * Tuning in is the listener's own click, so it may start a player that is mostly off-screen (just
+   * like resume() and setStation()); never in a hidden tab, though.
+   */
+  private mayStartNow(): boolean {
+    return this.startRequested ? document.visibilityState === "visible" : this.mayAutoplay();
+  }
 
   /** YouTube's rule for playback we start without a click: tab visible and more than half of the player on screen. */
   private mayAutoplay(): boolean {

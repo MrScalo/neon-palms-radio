@@ -590,6 +590,31 @@ describe("RadioEngine: only plays where the listener can see it", () => {
     expect(Math.abs(p.getCurrentTime() - live(next))).toBeLessThan(1);
   });
 
+  it("starts playing after Tune in even while most of the player is off-screen", async () => {
+    const slot = getSlotAt(Date.now(), HOME);
+    vi.setSystemTime(slot.startsAt + 10_000);
+    const engine = createEngine();
+    engine.tuneIn(host);
+    observer().report(0.2);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(player().cues).toHaveLength(0);
+    expect(lastStatus()).toBe("playing");
+    engine.tuneOut();
+  });
+
+  it("does not start after Tune in once the tab is hidden before the player is ready", async () => {
+    const slot = getSlotAt(Date.now(), HOME);
+    vi.setSystemTime(slot.startsAt + 10_000);
+    const engine = createEngine();
+    engine.tuneIn(host);
+    setVisibility("hidden");
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(player().loads).toHaveLength(0);
+    expect(player().cues).toHaveLength(1);
+    expect(lastStatus()).toBe("paused");
+    engine.tuneOut();
+  });
+
   it("lets the listener's own click play while the player is mostly off-screen", async () => {
     const { engine, slot, player: p } = await tunedIn();
     observer().report(0.3);
