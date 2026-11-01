@@ -1,26 +1,793 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Neon Palms FM design tokens. Names are a shared contract — extend, don't rename.
+ * Use as Tailwind utilities (bg-ink, text-neon-pink, font-script, …) or as CSS vars (var(--color-neon-pink)).
+ */
+@theme {
+  --color-ink: #0b0618; /* page background, deep night */
+  --color-dusk: #1a0b2e; /* raised surfaces */
+  --color-plum: #3b0f4f; /* borders, dividers */
+  --color-neon-pink: #ff2fa0;
+  --color-hot-pink: #ff6ec7;
+  --color-neon-cyan: #22e6ff;
+  --color-violet: #8b5cf6;
+  --color-sunset-orange: #ff8a3d;
+  --color-sunset-yellow: #ffd23f;
+  --color-cream: #fff4e6; /* primary text */
+  --color-muted: #b8a6d9; /* secondary text */
+  --color-on-air: #ff3b3b; /* ON AIR lamp */
 }
 
+/* Font families come from next/font (see layout.tsx): font-script, font-display, font-sans, font-lcd */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-script: var(--font-mr-dafoe), cursive;
+  --font-display: var(--font-audiowide), system-ui, sans-serif;
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-lcd: var(--font-vt323), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+}
+
+/* =============================================================================================
+ * Station page (src/components/radio). Everything below only adds to the tokens above.
+ *
+ * Layering inside .np-stage (an isolated stacking context):
+ *   -10  sky, stars, grid floor          (SceneBackdrop)
+ *    -3  sun, halo, horizon glow         (SunWindow)
+ *    -2  palm silhouettes                (ScenePalms, SunWindow)
+ *   auto header, player, panels
+ * The player screen itself never gets anything drawn on top of it while YouTube is loaded.
+ * ============================================================================================= */
+
+@layer base {
+  ::selection {
+    background-color: rgb(255 47 160 / 0.4);
+    color: var(--color-cream);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-neon-cyan);
+    outline-offset: 3px;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Shared geometry: the header height and the sun window decide where the horizon sits, so the
+     backdrop (absolutely positioned) and the in-flow sun always meet on the same line. */
+  .np-stage {
+    --pad: 1rem;
+    --header-h: 9.25rem;
+    --sun-h: 8.5rem;
+    --floor-peek: 1.25rem;
+    --side-w: 22rem;
+    --horizon: calc(var(--header-h) + var(--sun-h) - var(--floor-peek));
+    --floor-depth: max(26rem, 58svh);
+    --grid-cell: 1.5rem;
+  }
+
+  @media (width >= 40rem) {
+    .np-stage {
+      --pad: 1.5rem;
+      --header-h: 9.5rem;
+      --sun-h: 10rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .np-stage {
+      --pad: 2rem;
+      --header-h: 10rem;
+      --sun-h: 17rem;
+    }
+  }
+
+  @media (width >= 80rem) {
+    .np-stage {
+      --sun-h: 18.5rem;
+      --side-w: 26rem;
+    }
+  }
+
+  .np-container {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+
+  .np-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "sun" "set" "info";
+    gap: 0.75rem 2.5rem;
+  }
+
+  @media (width >= 64rem) {
+    .np-main {
+      grid-template-columns: minmax(0, 1fr) var(--side-w);
+      grid-template-rows: var(--sun-h) auto;
+      grid-template-areas: "set sun" "set info";
+      row-gap: 1.5rem;
+    }
+  }
+
+  /* --- Backdrop -------------------------------------------------------------------------- */
+
+  .np-scene {
+    height: calc(var(--horizon) + var(--floor-depth));
+  }
+
+  .np-sky {
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--horizon);
+    background: linear-gradient(
+      180deg,
+      var(--color-ink) 0%,
+      #140926 28%,
+      #26103f 46%,
+      #4a1460 62%,
+      #851d6c 76%,
+      #c8366f 87%,
+      #f2625a 95%,
+      #ff9a4a 100%
+    );
+  }
+
+  .np-stars {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(var(--horizon) * 0.72);
+  }
+
+  .np-star {
+    position: absolute;
+    border-radius: 9999px;
+    background: var(--color-cream);
+  }
+
+  .np-floor {
+    position: absolute;
+    inset: var(--horizon) 0 0;
+    overflow: hidden;
+    perspective: 20rem;
+    perspective-origin: 50% 0;
+    background: linear-gradient(180deg, #3c0f4c 0%, #1d0831 24%, #10061e 62%, var(--color-ink) 100%);
+    mask-image: linear-gradient(180deg, #000 70%, transparent 97%);
+  }
+
+  /* Tilted away from the viewer around the horizon. Its depth stays shorter than
+     perspective / sin(angle), so no part of it ever ends up behind the camera. */
+  .np-floor-plane {
+    position: absolute;
+    top: 0;
+    left: -60%;
+    right: -60%;
+    height: 21rem;
+    overflow: hidden;
+    transform-origin: 50% 0;
+    transform: rotateX(62deg);
+  }
+
+  .np-floor-lines {
+    position: absolute;
+    inset: calc(var(--grid-cell) * -1) 0 0;
+    background-image:
+      linear-gradient(to bottom, rgb(255 47 160 / 0.9) 0 2px, transparent 2px),
+      linear-gradient(to bottom, rgb(255 47 160 / 0.22) 0 6px, transparent 6px),
+      linear-gradient(to right, rgb(168 85 247 / 0.8) 0 2px, transparent 2px),
+      linear-gradient(to right, rgb(168 85 247 / 0.18) 0 6px, transparent 6px);
+    background-size:
+      100% var(--grid-cell),
+      100% var(--grid-cell),
+      var(--grid-cell) 100%,
+      var(--grid-cell) 100%;
+    background-position: 0 -2px, 0 -4px, -2px 0, -4px 0;
+  }
+
+  .np-floor-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(255 110 199 / 0.3) 0%,
+      rgb(255 110 199 / 0) 16%,
+      rgb(11 6 24 / 0) 38%,
+      rgb(11 6 24 / 0.75) 72%,
+      var(--color-ink) 92%
+    );
+  }
+
+  .np-horizon {
+    position: absolute;
+    inset-inline: 0;
+    top: calc(var(--horizon) - 1px);
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      rgb(255 110 199 / 0),
+      rgb(255 110 199 / 0.85) 18%,
+      #ffd9b0 50%,
+      rgb(255 110 199 / 0.85) 82%,
+      rgb(255 110 199 / 0)
+    );
+    box-shadow: 0 0 18px 2px rgb(255 47 160 / 0.5);
+  }
+
+  /* --- Palms ------------------------------------------------------------------------------ */
+
+  .np-palms {
+    mask-image: linear-gradient(180deg, #000 72%, transparent 98%);
+  }
+
+  .np-palm {
+    position: absolute;
+    bottom: 0;
+    height: min(86%, 62rem);
+    aspect-ratio: 640 / 1000;
+    overflow: visible;
+  }
+
+  .np-palm-body {
+    fill: var(--np-palm, #12051f);
+  }
+
+  .np-palm-rim {
+    fill: rgb(255 47 160 / 0.42);
+  }
+
+  .np-palm-outline {
+    fill: none;
+    stroke: rgb(255 150 120 / 0.9);
+    stroke-width: 7;
+    stroke-linejoin: round;
+  }
+
+  .np-palm--left {
+    right: min(calc(100% - 8.5rem), calc(50% + 33rem));
+  }
+
+  .np-palm--right {
+    left: min(calc(100% - 8.5rem), calc(50% + 33rem));
+  }
+
+  .np-palm--far {
+    --np-palm: #2b0d45;
+    display: none;
+    height: min(62%, 42rem);
+    right: min(calc(100% - 3rem), calc(50% + 36rem));
+  }
+
+  @media (width >= 64rem) {
+    .np-palm {
+      height: min(94%, 62rem);
+    }
+
+    .np-palm--far {
+      display: block;
+      height: min(64%, 42rem);
+    }
+  }
+
+  /* --- Sun window --------------------------------------------------------------------------- */
+
+  .np-sun-anchor {
+    position: absolute;
+    z-index: -3;
+    left: 50%;
+    bottom: var(--floor-peek);
+    width: min(88%, 24rem, calc((var(--sun-h) - var(--floor-peek) - 0.75rem) * 1.6));
+    translate: -50% 0;
+  }
+
+  .np-sun {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .np-sun-halo {
+    position: absolute;
+    left: 50%;
+    top: 80%;
+    width: 200%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 9999px;
+    background: radial-gradient(
+      closest-side,
+      rgb(255 154 74 / 0.5),
+      rgb(255 47 160 / 0.24) 46%,
+      rgb(255 47 160 / 0) 100%
+    );
+  }
+
+  .np-sun-reflection {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 280%;
+    height: 4.5rem;
+    translate: -50% 50%;
+    background: radial-gradient(closest-side, rgb(255 110 199 / 0.5), rgb(255 110 199 / 0));
+  }
+
+  .np-palm--window {
+    z-index: -2;
+    display: none;
+    right: -12%;
+    bottom: var(--floor-peek);
+    height: calc(100% - var(--floor-peek));
+  }
+
+  @media (width >= 64rem) {
+    .np-palm--window {
+      display: block;
+    }
+  }
+
+  /* --- Header ------------------------------------------------------------------------------- */
+
+  .np-wordmark {
+    color: var(--color-cream);
+    text-shadow:
+      0 0 2px rgb(255 244 230 / 0.9),
+      0 0 8px var(--color-hot-pink),
+      0 0 18px var(--color-neon-pink),
+      0 0 38px rgb(255 47 160 / 0.7),
+      0 0 76px rgb(255 47 160 / 0.4);
+  }
+
+  .np-lcd {
+    border: 1px solid var(--color-plum);
+    background: linear-gradient(180deg, #0a0414, #12071f);
+    box-shadow: inset 0 1px 6px rgb(0 0 0 / 0.7);
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 8px rgb(34 230 255 / 0.55);
+  }
+
+  .np-lamp {
+    position: relative;
+    border: 2px solid #3a0d1c;
+    background: linear-gradient(180deg, #d8202a 0%, #b5141d 55%, #8e0c14 100%);
+    color: var(--color-cream);
+    text-shadow: 0 0 6px rgb(255 59 59 / 0.9);
+    box-shadow:
+      inset 0 1px 0 rgb(255 200 190 / 0.45),
+      inset 0 -2px 4px rgb(0 0 0 / 0.35);
+  }
+
+  .np-lamp::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    box-shadow:
+      0 0 14px 2px rgb(255 59 59 / 0.75),
+      0 0 34px 6px rgb(255 59 59 / 0.35);
+    pointer-events: none;
+  }
+
+  /* --- Player set --------------------------------------------------------------------------- */
+
+  .np-chassis {
+    position: relative;
+    border-radius: 1.75rem;
+    border: 1px solid rgb(255 110 199 / 0.22);
+    background:
+      linear-gradient(180deg, rgb(255 244 230 / 0.07), rgb(255 244 230 / 0) 18%),
+      linear-gradient(160deg, #2b1247 0%, #180a2c 48%, #0e0619 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 244 230 / 0.14),
+      inset 0 -2px 0 rgb(0 0 0 / 0.45),
+      0 0 0 1px rgb(11 6 24 / 0.9),
+      0 40px 80px -32px rgb(255 47 160 / 0.5),
+      0 30px 60px -24px rgb(0 0 0 / 0.8);
+  }
+
+  .np-chassis::after {
+    content: "";
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, transparent, var(--color-hot-pink), var(--color-sunset-orange), var(--color-hot-pink), transparent);
+    box-shadow: 0 0 14px rgb(255 47 160 / 0.7);
+    pointer-events: none;
+  }
+
+  .np-bezel {
+    border-radius: 1.125rem;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-neon-pink), var(--color-violet) 52%, var(--color-neon-cyan));
+    box-shadow: 0 0 26px -6px rgb(255 47 160 / 0.6);
+  }
+
+  .np-bezel-inner {
+    border-radius: calc(1.125rem - 2px);
+    padding: 0.5rem;
+    background: #07030d;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.04),
+      inset 0 10px 24px rgb(0 0 0 / 0.85);
+  }
+
+  @media (width >= 40rem) {
+    .np-bezel-inner {
+      padding: 0.625rem;
+    }
+  }
+
+  /* The ratio comes from a zero-width spacer (percentage padding follows the width) rather than
+     aspect-ratio, so content taller than the ratio (the consent text on narrow screens) grows the
+     screen instead of overflowing it. 4:3 on phones keeps the player well above 200 px tall, 16:9 from 640 px. */
+  .np-screen {
+    position: relative;
+    display: flex;
+    width: 100%;
+    background: #05020a;
+  }
+
+  .np-screen::before {
+    content: "";
+    flex: none;
+    width: 0;
+    min-height: 13.5rem;
+    padding-bottom: 75%;
+  }
+
+  @media (width >= 40rem) {
+    .np-screen::before {
+      padding-bottom: 56.25%;
+    }
+  }
+
+  .np-screen-idle {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: radial-gradient(120% 95% at 50% 42%, #22103b 0%, #0e0619 55%, #05020a 100%);
+  }
+
+  .np-screen-idle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(180deg, rgb(255 244 230 / 0.035) 0 1px, transparent 1px 3px);
+  }
+
+  .np-screen-idle::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0) 30%);
+  }
+
+  .np-screen-sweep {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 35%;
+    opacity: 0;
+    background: linear-gradient(180deg, rgb(34 230 255 / 0), rgb(34 230 255 / 0.09), rgb(34 230 255 / 0));
+  }
+
+  .np-screen[data-status="connecting"] .np-screen-sweep {
+    opacity: 1;
+  }
+
+  .np-orb {
+    border: 2px solid var(--color-neon-pink);
+    background: radial-gradient(circle at 50% 35%, rgb(255 47 160 / 0.28), rgb(255 47 160 / 0.06) 70%);
+    color: var(--color-hot-pink);
+    box-shadow:
+      0 0 0 6px rgb(255 47 160 / 0.08),
+      0 0 30px rgb(255 47 160 / 0.55),
+      inset 0 0 18px rgb(255 47 160 / 0.35);
+    transition:
+      transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 200ms ease;
+  }
+
+  .np-nudge {
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 2px solid var(--color-neon-cyan);
+    box-shadow: 0 0 18px rgb(34 230 255 / 0.6);
+    pointer-events: none;
+  }
+
+  /* --- Panels & controls -------------------------------------------------------------------- */
+
+  .np-panel {
+    border-radius: 1.25rem;
+    border: 1px solid var(--color-plum);
+    background: linear-gradient(180deg, rgb(30 13 52 / 0.94), rgb(16 7 30 / 0.94));
+    box-shadow:
+      inset 0 1px 0 rgb(255 244 230 / 0.06),
+      0 24px 48px -24px rgb(0 0 0 / 0.75);
+  }
+
+  .np-progress-fill {
+    background: linear-gradient(90deg, var(--color-violet), var(--color-neon-pink) 70%, var(--color-sunset-orange));
+    box-shadow: 0 0 12px rgb(255 47 160 / 0.6);
+  }
+
+  .np-eq-bar {
+    transform-origin: 50% 100%;
+    transform: scaleY(0.25);
+  }
+
+  .np-range {
+    --np-fill: var(--color-neon-pink);
+    appearance: none;
+    height: 2.75rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .np-range[data-muted="true"] {
+    --np-fill: var(--color-muted);
+  }
+
+  .np-range:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .np-range:focus-visible {
+    outline-offset: 0;
+    border-radius: 0.5rem;
+  }
+
+  .np-range::-webkit-slider-runnable-track {
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--np-fill) var(--np-level), #2a0c3a var(--np-level));
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.6);
+  }
+
+  .np-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: -0.375rem;
+    border-radius: 9999px;
+    border: 3px solid var(--np-fill);
+    background: var(--color-cream);
+    box-shadow: 0 0 10px rgb(255 47 160 / 0.55);
+  }
+
+  .np-range::-moz-range-track {
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: #2a0c3a;
+  }
+
+  .np-range::-moz-range-progress {
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: var(--np-fill);
+  }
+
+  .np-range::-moz-range-thumb {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    border: 3px solid var(--np-fill);
+    background: var(--color-cream);
+    box-shadow: 0 0 10px rgb(255 47 160 / 0.55);
+  }
+
+  /* --- Ticker -------------------------------------------------------------------------------- */
+
+  .np-marquee {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  }
+
+  .np-marquee-copy {
+    display: none;
+  }
+}
+
+/* Motion lives only here, so prefers-reduced-motion gets a completely still page. */
+@media (prefers-reduced-motion: no-preference) {
+  .np-floor-lines {
+    animation: np-floor-travel 1.9s linear infinite;
+  }
+
+  .np-horizon {
+    animation: np-breathe 5s ease-in-out infinite alternate;
+  }
+
+  .np-twinkle-a {
+    animation: np-twinkle 3.6s ease-in-out infinite alternate;
+  }
+
+  .np-twinkle-b {
+    animation: np-twinkle 5.2s ease-in-out 1.3s infinite alternate;
+  }
+
+  .np-sun-halo {
+    animation: np-breathe 6s ease-in-out infinite alternate;
+  }
+
+  .np-sway {
+    animation: np-sway var(--np-sway-duration, 9s) ease-in-out var(--np-sway-delay, 0s) infinite alternate;
+  }
+
+  .np-wordmark {
+    animation: np-neon-on 1.4s steps(1, end) 0.2s both;
+  }
+
+  .np-lamp::after {
+    animation: np-breathe 2.4s ease-in-out infinite alternate;
+  }
+
+  .np-screen[data-status="connecting"] .np-screen-sweep {
+    animation: np-scan 1.6s linear infinite;
+  }
+
+  .np-blink {
+    animation: np-blink 0.9s steps(2, jump-none) infinite;
+  }
+
+  .np-orb:hover {
+    transform: scale(1.04);
+  }
+
+  .np-orb:active {
+    transform: scale(0.97);
+  }
+
+  .np-nudge {
+    animation: np-nudge 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  [data-live="true"] .np-eq-bar {
+    animation: np-eq var(--np-eq-duration, 0.9s) ease-in-out var(--np-eq-delay, 0s) infinite alternate;
+  }
+
+  .np-marquee {
+    overflow: hidden;
+  }
+
+  .np-marquee-copy {
+    display: flex;
+  }
+
+  .np-marquee-track {
+    animation: np-marquee 70s linear infinite;
+  }
+
+  .np-marquee:hover .np-marquee-track,
+  .np-ticker[data-paused="true"] .np-marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+/* Without motion the bulletin strip can be scrolled by hand instead. */
+@media (prefers-reduced-motion: reduce) {
+  .np-marquee {
+    overflow-x: auto;
+    mask-image: none;
+    scrollbar-width: thin;
+  }
+}
+
+@keyframes np-floor-travel {
+  to {
+    transform: translateY(var(--grid-cell));
+  }
+}
+
+@keyframes np-breathe {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes np-twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.2;
+  }
+}
+
+@keyframes np-sway {
+  from {
+    transform: rotate(-0.8deg);
+  }
+  to {
+    transform: rotate(0.9deg);
+  }
+}
+
+/* A sign switching on: two short dips, then steady (well under three flashes per second). */
+@keyframes np-neon-on {
+  0% {
+    opacity: 0.15;
+  }
+  18% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.35;
+  }
+  46% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes np-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(300%);
+  }
+}
+
+@keyframes np-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+@keyframes np-nudge {
+  from {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes np-eq {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes np-marquee {
+  to {
+    transform: translateX(-50%);
+  }
 }
