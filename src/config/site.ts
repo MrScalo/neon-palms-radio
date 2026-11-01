@@ -1,10 +1,9 @@
 /**
  * Station identity plus the legal details shown in the legal notice and the privacy policy.
  *
- * IMPORTANT: every value in square brackets is a placeholder. They MUST be replaced with the
- * real operator and hosting details before this site is published — a legal notice and a
- * privacy policy with placeholders are not valid. While any placeholder remains,
- * `isOperatorConfigured` is false and the legal pages show a warning.
+ * Running your own copy? Replace the operator and hosting details with your own. A value in
+ * square brackets counts as a placeholder: while any remains, `isOperatorConfigured` is false
+ * and the legal pages show a "Draft" warning.
  */
 export const site = {
   name: "Neon Palms FM",
@@ -12,18 +11,19 @@ export const site = {
   tagline: "Neon nights. Endless summer.",
   location: "the Sunset Coast",
   operator: {
-    name: "[Operator name]",
-    street: "[Street and house number]",
-    postalCity: "[Postal code and city]",
-    country: "[Country]",
-    email: "[Contact email address]",
+    name: "Nico Peitz",
+    street: "Mettlerkampsweg 28",
+    postalCity: "20535 Hamburg",
+    country: "Germany",
+    email: "nico.peitz22@gmail.com",
   },
   hosting: {
-    provider: "[Hosting provider name]",
-    address: "[Hosting provider address]",
-    // Art. 13(2)(a) GDPR requires stating how long server logs are kept. If the provider stores
-    // data outside the EU/EEA, the privacy policy must also name the legal basis for that transfer.
-    logRetention: "[Log retention period, e.g. 14 days]",
+    provider: "Vercel Inc.",
+    address: "440 N Barranca Avenue #4133, Covina, CA 91723, USA",
+    privacyPolicyUrl: "https://vercel.com/legal/privacy-policy",
+    // Art. 13(2)(a) GDPR: how long the server logs we can access are kept (Vercel Hobby plan:
+    // runtime logs for one hour). The US transfer basis is stated in the privacy policy itself.
+    logRetention: "one hour",
   },
 } as const;
 

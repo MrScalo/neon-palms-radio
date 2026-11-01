@@ -200,17 +200,21 @@ Videos can be removed or blocked at any time, so re-run `npm run verify:playlist
 
 ## Deploying
 
-`/api/time` must answer every request live, so the site needs a host that runs Node.js
-(`npm run build` + `npm start`, or a platform with full Next.js support such as Vercel). A static
-export won't work.
+The station is made for **Vercel**: import the repository at
+[vercel.com/new](https://vercel.com/new) and deploy — no settings or environment variables needed.
+[`vercel.json`](vercel.json) runs the server functions (the station clock) in Frankfurt (`fra1`);
+pages are served from Vercel's global CDN.
 
-**Before you publish:**
+Any other host works too as long as it runs Node.js (`npm run build` + `npm start`) — `/api/time`
+must answer every request live, so a static export won't work.
 
-- [ ] Replace every `[…]` placeholder in [`src/config/site.ts`](src/config/site.ts) — operator name and
-      address, contact email, hosting provider and server-log retention. Until then `/privacy` and
-      `/imprint` show a “Draft” note.
-- [ ] Read both legal pages once more. If your host processes data outside the EU/EEA, add the legal
-      basis for that transfer to the hosting section.
+**Running your own copy?**
+
+- [ ] Put your own operator and hosting details into [`src/config/site.ts`](src/config/site.ts). A
+      value in `[brackets]` counts as a placeholder and makes `/privacy` and `/imprint` show a
+      “Draft” note.
+- [ ] Read both legal pages once more — the hosting section describes Vercel. On another host,
+      adjust it, including the legal basis if data leaves the EU/EEA.
 - [ ] The legal notice cites § 18 (1) MStV for a private, non-commercial site. If the site becomes
       commercial, switch to § 5 DDG and add a second direct contact channel.
 - [ ] After deploying, check that the security headers are served and the player still starts.

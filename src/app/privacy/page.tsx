@@ -83,9 +83,24 @@ export default function PrivacyPage() {
         We need this data to deliver the website to you, to keep it secure and stable, and to
         detect and fix errors and misuse. The legal basis is Art. 6(1)(f) GDPR — our legitimate
         interest in a secure, working website. The recipient of this data is our hosting
-        provider, which runs the servers for us. The log files are kept for{" "}
-        {site.hosting.logRetention} and then deleted. We do not combine them with other data and
-        do not use them to identify you.
+        provider, which runs the servers for us on our behalf under a data processing agreement
+        (Art. 28 GDPR). The log entries we can access are kept for {site.hosting.logRetention}{" "}
+        and then deleted; {site.hosting.provider} itself keeps such technical data only as long as
+        it needs it to run and secure its service. We do not combine this data with other data and
+        do not use it to identify you.
+      </p>
+      <p>
+        Our server functions (such as the station clock below) run in Vercel’s Frankfurt region in
+        Germany. Pages and files are delivered through Vercel’s global network from the location
+        nearest to you. Because {site.hosting.provider} is based in the USA, personal data may be
+        transferred there. Vercel is certified under the EU-U.S. Data Privacy Framework, for which
+        the European Commission adopted an adequacy decision on 10 July 2023 (Art. 45 GDPR); in
+        addition, the data processing agreement includes the EU Standard Contractual Clauses
+        (Art. 46(2)(c) GDPR). Details:{" "}
+        <a href={site.hosting.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
+          Vercel’s privacy policy
+        </a>
+        .
       </p>
 
       <h2 id="station-clock">The station clock</h2>
@@ -93,7 +108,9 @@ export default function PrivacyPage() {
         {site.name} works like a real radio station: every listener hears the same song at the
         same moment. To make that possible, your browser asks our own server for the current
         time (the <code>/api/time</code> endpoint) when you open the station and may repeat this
-        to keep the clock in sync. The answer contains nothing but the server time.
+        to keep the clock in sync. The answer contains nothing but the server time and a short
+        version tag of the playlist, so a page opened before a playlist update knows it is out of
+        date.
       </p>
       <p>
         These requests only synchronise playback. Nothing is stored about them beyond the normal
