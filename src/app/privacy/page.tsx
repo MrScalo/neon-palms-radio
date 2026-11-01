@@ -100,6 +100,12 @@ export default function PrivacyPage() {
         do not use it to identify you.
       </p>
       <p>
+        For the same purpose, {site.hosting.provider}&apos;s firewall briefly uses your IP address to
+        fend off attacks and to limit how often a single connection can report to the listener
+        count (rate limiting). Nothing is stored for this beyond short-lived counters at the
+        firewall.
+      </p>
+      <p>
         Our server functions (such as the station clock and the listener count below) run in
         Vercel’s Frankfurt region in Germany. Pages and files are delivered through Vercel’s global
         network from the location nearest to you. Because {site.hosting.provider} is based in the USA, personal data may be
