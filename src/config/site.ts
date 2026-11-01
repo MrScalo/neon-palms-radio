@@ -8,6 +8,8 @@
  */
 export const site = {
   name: "Neon Palms Radio",
+  /** The canonical address; the old vercel.app address redirects here (next.config.ts). */
+  url: "https://neonpalms.de",
   /** The neon script part of the logo; the logo adds "Radio" next to it. */
   wordmark: "Neon Palms",
   operator: {

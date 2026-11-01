@@ -31,6 +31,17 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    // One address for everyone: the project's original vercel.app address moves to the own domain.
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "neon-palms-radio.vercel.app" }],
+        destination: "https://neonpalms.de/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -15,7 +15,7 @@ Everyone on the same station hears the same song at the same moment — just lik
 ![No tracking](https://img.shields.io/badge/tracking-none-ff2fa0)
 [![MIT License](https://img.shields.io/badge/license-MIT-22e6ff)](LICENSE)
 
-**[▶ Listen live: neon-palms-radio.vercel.app](https://neon-palms-radio.vercel.app)**
+**[▶ Listen live: neonpalms.de](https://neonpalms.de)**
 
 <img src="docs/screenshot-desktop.jpg" alt="Neon Palms Radio on a wide screen: the neon script logo with the selected station, 107.7 FM Heatwave, and the tagline; ON AIR and LIVE lamps; a striped retro sun with palm trees over a glowing grid floor; the consent card in the TV-style player screen with Accept and Not now buttons; Tune in and volume controls; the three station presets, each with its frequency, tagline and current song; a Now Playing card and an Up Next list." width="900">
 
