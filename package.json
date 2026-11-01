@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Unofficial fan web radio with an 80s neon-sunset vibe: every listener hears the same official YouTube music video at the same moment.",
+  "license": "MIT",
   "homepage": "https://github.com/MrScalo/neon-palms-radio#readme",
   "repository": {
     "type": "git",

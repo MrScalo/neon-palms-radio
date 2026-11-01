@@ -13,6 +13,7 @@ Everyone hears the same song at the same moment — just like real radio.
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![No tracking](https://img.shields.io/badge/tracking-none-ff2fa0)
+[![MIT License](https://img.shields.io/badge/license-MIT-22e6ff)](LICENSE)
 
 <img src="docs/screenshot-desktop.jpg" alt="Neon Palms FM: a neon script logo over a striped retro sun, palm trees and a glowing grid floor. A TV-style screen asks for consent before the YouTube player loads; next to it a Now Playing card and an Up Next list." width="900">
 
@@ -224,3 +225,9 @@ Google, or by any of the artists or record labels whose music it plays.
 This repository contains no music or video files. All music videos are played from the official
 YouTube channels of the respective artists and labels through YouTube's embedded player; all rights
 remain with their owners.
+
+## License
+
+The source code is released under the [MIT License](LICENSE). It covers the code and the original
+artwork in this repository only — not the music, music videos, artist names or song titles referenced
+in the playlist, which belong to their respective owners.
