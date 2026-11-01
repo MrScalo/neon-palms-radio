@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Slot, Track } from "@/lib/radio/types";
-import { formatClock, secondsUntil, slotKey } from "../format";
+import { formatClock, formatCount, secondsUntil, slotKey } from "../format";
 
 const track: Track = { id: "x", artist: "Artist", title: "Title", year: 1986, duration: 200, channel: "Artist" };
 
@@ -47,5 +47,18 @@ describe("slotKey", () => {
 
   it("tells the same position on two stations apart", () => {
     expect(slotKey({ ...slot(0, 4), stationId: "heatwave" })).not.toBe(slotKey(slot(0, 4)));
+  });
+});
+
+describe("formatCount", () => {
+  it("groups thousands", () => {
+    expect(formatCount(0)).toBe("0");
+    expect(formatCount(23)).toBe("23");
+    expect(formatCount(1234)).toBe("1,234");
+  });
+
+  it("never shows negative or invalid values", () => {
+    expect(formatCount(-3)).toBe("0");
+    expect(formatCount(Number.NaN)).toBe("0");
   });
 });

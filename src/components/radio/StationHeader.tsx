@@ -1,14 +1,25 @@
+import { COUNTDOWN } from "@/config/countdown";
 import type { Station } from "@/lib/radio/types";
+import { CountdownChip } from "./CountdownChip";
 import { LivePill } from "./LivePill";
 import { OnAirLamp } from "./OnAirLamp";
 import { NETWORK } from "./station";
 
-export function StationHeader({ live, station }: { live: boolean; station: Station }) {
+type StationHeaderProps = {
+  live: boolean;
+  station: Station;
+  /** Everyone tuned in across the network; null hides the count. */
+  listeners: number | null;
+  /** Switches to the countdown's station, like pressing its preset */
+  onCountdownTune(): void;
+};
+
+export function StationHeader({ live, station, listeners, onCountdownTune }: StationHeaderProps) {
   return (
     <header className="np-container grid h-(--header-h) grid-cols-[minmax(0,1fr)_auto] content-center items-center gap-x-6 gap-y-2 pt-3 sm:pt-0">
       <div className="col-span-2 flex items-center justify-between gap-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:flex-col sm:items-end sm:gap-2 lg:flex-row lg:items-center lg:gap-3">
         <OnAirLamp />
-        <LivePill live={live} />
+        <LivePill live={live} listeners={listeners} />
       </div>
 
       <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-1 sm:row-start-1">
@@ -28,6 +39,8 @@ export function StationHeader({ live, station }: { live: boolean; station: Stati
           </p>
           <p className="truncate text-sm text-cream/90 sm:text-base">{NETWORK.tagline}</p>
         </div>
+        {/* Its own row: next to the display it would squeeze out the tagline. The header grows to fit (globals.css). */}
+        <CountdownChip tuned={station.id === COUNTDOWN.stationId} onTune={onCountdownTune} className="mt-1.5" />
       </div>
     </header>
   );

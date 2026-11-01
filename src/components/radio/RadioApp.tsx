@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { COUNTDOWN } from "@/config/countdown";
 import { DEFAULT_STATION_ID } from "@/config/stations";
 import { useRadio } from "@/hooks/useRadio";
 import { useYouTubeConsent } from "@/lib/consent";
@@ -23,6 +24,7 @@ import { Tuner } from "./Tuner";
 import { TuneInCard } from "./TuneInCard";
 import { UpNext } from "./UpNext";
 import { useNowPlayingTitle } from "./useNowPlayingTitle";
+import { usePresence } from "./usePresence";
 import { prefersReducedMotion, useTuning } from "./useTuning";
 
 type RadioAppProps = {
@@ -60,6 +62,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
   const remaining = current ? Math.max(0, current.track.duration - elapsed) : 0;
 
   useNowPlayingTitle(playing && current ? current.track : null, station);
+  const presence = usePresence(station.id);
 
   // The server always renders the default station, and Next keeps this page alive (hidden) while
   // the listener is on another page. So on first load and every time the page shows again, line the
@@ -167,7 +170,12 @@ export function RadioApp({ scenery }: RadioAppProps) {
       data-switched={tuneEvent !== null}
       style={{ "--station-accent": station.accent } as CSSProperties}
     >
-      <StationHeader live={playing} station={station} />
+      <StationHeader
+        live={playing}
+        station={station}
+        listeners={presence?.total ?? null}
+        onCountdownTune={() => switchStation(COUNTDOWN.stationId)}
+      />
       <main id="main" className="np-container np-main flex-1 pb-14 lg:pb-20">
         {scenery}
         <RadioSet
@@ -194,6 +202,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
               stations={stations}
               station={station}
               onAir={radio.onAir}
+              listeners={presence?.stations ?? null}
               announcement={announcement.stationId === station.id ? announcement.text : ""}
               onSelect={switchStation}
             />

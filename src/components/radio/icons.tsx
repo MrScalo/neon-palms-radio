@@ -59,6 +59,16 @@ export function PauseIcon(props: IconProps) {
   );
 }
 
+export function HeadphonesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.5 14.5V12a7.5 7.5 0 0 1 15 0v2.5" />
+      <path d="M4.5 14h2a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 6.5 20H6a1.5 1.5 0 0 1-1.5-1.5z" />
+      <path d="M19.5 14h-2a1.5 1.5 0 0 0-1.5 1.5v3a1.5 1.5 0 0 0 1.5 1.5h.5a1.5 1.5 0 0 0 1.5-1.5z" />
+    </Icon>
+  );
+}
+
 export function PlayIcon(props: IconProps) {
   return (
     <Icon {...props}>

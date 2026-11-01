@@ -122,6 +122,23 @@ body {
     }
   }
 
+  /* The countdown chip (CountdownChip) adds a row under the station display; the horizon moves with it. */
+  .np-stage:has(.np-countdown) {
+    --header-h: 11.25rem;
+  }
+
+  @media (width >= 40rem) {
+    .np-stage:has(.np-countdown) {
+      --header-h: 10.75rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .np-stage:has(.np-countdown) {
+      --header-h: 11rem;
+    }
+  }
+
   .np-container {
     width: 100%;
     max-width: 80rem;
@@ -388,6 +405,30 @@ body {
     border-color: color-mix(in oklab, var(--station-accent) 35%, var(--color-plum));
     color: color-mix(in oklab, var(--station-accent) 78%, var(--color-cream));
     text-shadow: 0 0 8px color-mix(in oklab, var(--station-accent) 55%, transparent);
+  }
+
+  /* Always in its own station's colour (--countdown-accent), whichever station is selected. */
+  .np-countdown {
+    border-color: color-mix(in oklab, var(--countdown-accent) 40%, var(--color-plum));
+    color: color-mix(in oklab, var(--countdown-accent) 80%, var(--color-cream));
+    text-shadow: 0 0 8px color-mix(in oklab, var(--countdown-accent) 55%, transparent);
+  }
+
+  .np-countdown:hover {
+    border-color: color-mix(in oklab, var(--countdown-accent) 75%, transparent);
+    box-shadow:
+      inset 0 1px 6px rgb(0 0 0 / 0.7),
+      0 0 14px -2px color-mix(in oklab, var(--countdown-accent) 60%, transparent);
+  }
+
+  .np-countdown-label {
+    color: rgb(255 244 230 / 0.85);
+    text-shadow: none;
+  }
+
+  /* Unlit digits until the clock is known (server render, hydration). */
+  .np-countdown [data-placeholder="true"] {
+    opacity: 0.45;
   }
 
   .np-lamp {
@@ -681,6 +722,43 @@ body {
     line-height: 1;
   }
 
+  /* Listener count: under the frequency on stacked keys, in the LED's corner on side-by-side ones. */
+  .np-preset[data-listeners="true"] {
+    grid-template-areas:
+      "key name freq"
+      "key tagline tagline"
+      "key now listeners";
+  }
+
+  .np-preset-listeners {
+    grid-area: listeners;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-muted);
+    font-family: var(--font-lcd);
+    font-size: 1.0625rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .np-preset-listeners svg {
+    flex: none;
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  /* Lit like the LED it replaces */
+  .np-preset[data-checked="true"] .np-preset-listeners {
+    color: color-mix(in oklab, var(--preset-accent) 80%, var(--color-cream));
+  }
+
+  .np-preset[data-checked="true"] .np-preset-listeners svg {
+    filter: drop-shadow(0 0 4px var(--preset-accent));
+  }
+
   .np-preset-tagline {
     grid-area: tagline;
     color: var(--color-muted);
@@ -735,6 +813,19 @@ body {
     }
 
     .np-preset-freq {
+      align-self: center;
+    }
+
+    .np-preset[data-listeners="true"] {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "key freq listeners"
+        "name name name"
+        "tagline tagline tagline"
+        "now now now";
+    }
+
+    .np-preset-listeners {
       align-self: center;
     }
 
@@ -923,6 +1014,12 @@ body {
   .np-preset {
     transition:
       translate 120ms ease,
+      border-color 200ms ease,
+      box-shadow 240ms ease;
+  }
+
+  .np-countdown {
+    transition:
       border-color 200ms ease,
       box-shadow 240ms ease;
   }

@@ -1,5 +1,7 @@
 import { useId, useRef, type CSSProperties, type KeyboardEvent } from "react";
 import type { Slot, Station } from "@/lib/radio/types";
+import { formatCount } from "./format";
+import { HeadphonesIcon } from "./icons";
 import { presetIndexForKey } from "./presetKeys";
 
 type PresetButtonsProps = {
@@ -7,6 +9,8 @@ type PresetButtonsProps = {
   station: Station;
   /** Current slot of every station; null before the first clock tick. */
   onAir: ReadonlyMap<string, Slot> | null;
+  /** Listeners per station id; null hides the counts. */
+  listeners: Readonly<Record<string, number>> | null;
   /** Id of the element that names the group */
   labelledBy: string;
   onSelect(id: string): void;
@@ -16,7 +20,7 @@ type PresetButtonsProps = {
  * Car-radio preset keys as one radio group: Tab lands on the selected station, arrow keys move
  * and switch at once, digits jump straight to a preset.
  */
-export function PresetButtons({ stations, station, onAir, labelledBy, onSelect }: PresetButtonsProps) {
+export function PresetButtons({ stations, station, onAir, listeners, labelledBy, onSelect }: PresetButtonsProps) {
   const baseId = useId();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -38,6 +42,7 @@ export function PresetButtons({ stations, station, onAir, labelledBy, onSelect }
       {stations.map((item, index) => {
         const checked = item.id === station.id;
         const slot = onAir?.get(item.id) ?? null;
+        const count = listeners === null ? null : formatCount(listeners[item.id] ?? 0);
         const id = `${baseId}-${item.id}`;
 
         return (
@@ -51,16 +56,18 @@ export function PresetButtons({ stations, station, onAir, labelledBy, onSelect }
             aria-checked={checked}
             tabIndex={checked ? 0 : -1}
             aria-labelledby={`${id}-name ${id}-freq`}
-            aria-describedby={`${id}-tagline ${id}-now`}
+            aria-describedby={`${id}-tagline ${id}-now${count === null ? "" : ` ${id}-listeners`}`}
             onClick={() => onSelect(item.id)}
             data-checked={checked}
+            data-listeners={count !== null}
             className="np-preset"
             style={{ "--preset-accent": item.accent } as CSSProperties}
           >
             <span aria-hidden="true" className="np-preset-key">
               {index + 1}
             </span>
-            <span aria-hidden="true" className="np-preset-led" />
+            {/* The listener count takes the LED's place and lights up like it. */}
+            {count === null && <span aria-hidden="true" className="np-preset-led" />}
             <span id={`${id}-name`} className="np-preset-name">
               {item.name}
             </span>
@@ -68,6 +75,12 @@ export function PresetButtons({ stations, station, onAir, labelledBy, onSelect }
               {item.frequency}
               <span className="sr-only"> FM</span>
             </span>
+            {count !== null && (
+              <span id={`${id}-listeners`} role="img" aria-label={`${count} tuned in`} className="np-preset-listeners">
+                <HeadphonesIcon />
+                {count}
+              </span>
+            )}
             <span id={`${id}-tagline`} className="np-preset-tagline">
               {item.tagline}
             </span>

@@ -55,6 +55,11 @@ heard — _Trailer 2 · 2025_, _In-game radio · 2002, 2006_ — shown with the 
 - **Real radio controls** — tune in / tune out, switch stations, volume, mute. That's it.
 - **On-air feel** — a studio-style ON AIR lamp, a LIVE pill when you're tuned in, Now Playing with a
   live progress bar, the next three songs, and a ticker of station bulletins.
+- **Live listener count per station** — the header shows how many people are tuned in right now,
+  and every preset shows its own station's count. Counted without cookies or identifiers
+  ([how](#listener-count)).
+- **Release countdown** — a chip next to the station display counts down to the long-awaited
+  return to the neon coast; one click tunes to Heatwave ([details](#countdown)).
 - **Hand-picked tracks** — each one verified as an official upload. The lists live in
   [`src/data/stations/`](src/data/stations) and on the site's _Rotation_ page.
 - **Shareable** — the page address shows the station you picked, so a link opens the same station.
@@ -77,9 +82,9 @@ heard — _Trailer 2 · 2025_, _In-game radio · 2002, 2006_ — shown with the 
 
 ## How “live” works without a streaming server
 
-There is no audio stream and no backend state. Every browser computes the same programme for every
-station from the same track lists and the same clock, then points its own YouTube player at the right
-second of the station you picked.
+There is no audio stream, and playback needs no backend state. Every browser computes the same
+programme for every station from the same track lists and the same clock, then points its own YouTube
+player at the right second of the station you picked.
 
 ```mermaid
 sequenceDiagram
@@ -122,6 +127,64 @@ sequenceDiagram
 - The address shows the selected station (`/?station=rearview`) so links can be shared. Nothing is
   stored; an unknown station falls back to Heatwave.
 
+## Listener count
+
+The header shows how many people are tuned in right now (“23 tuned in”), and every preset shows its
+own station's count. It's counted without any identifier
+([`protocol.ts`](src/lib/presence/protocol.ts)):
+
+- Every open **and visible** tab sends one tiny request per 30-second window to our own
+  `POST /api/presence` — `{"station":"heatwave"}`, nothing else. No cookie, no ID, no browser storage.
+- The server adds 1 to that station's counter for the current window and answers with the counts of
+  the previous, complete window for all stations. Since every tab pings exactly once per window, that
+  count is the number of open, visible tabs.
+- Hidden tabs don't ping, so they drop out within a minute. Counters are just
+  `np:presence:<station>:<window>` → number, and expire two minutes after their last ping.
+- The browser only ever talks to our own server. The server keeps the counters in Upstash Redis
+  (Frankfurt) with one pipeline per ping: `INCR`, `EXPIRE`, `MGET`.
+
+### Turning it on
+
+On Vercel every function instance has its own memory, so the counters need a shared store:
+
+1. In the Vercel dashboard, open the project's **Storage** tab and add **Upstash for Redis** from the
+   Marketplace.
+2. Choose **Frankfurt (eu-central-1)** as the primary region and add no read regions — the privacy
+   policy says the counters stay in Frankfurt. The Free plan is enough to start (see below).
+3. Connect the database to the project. This sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+4. Redeploy.
+
+Using a database from the Upstash console instead? Set `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN`. The first complete pair wins, the `KV_*` names first
+([`config.ts`](src/lib/presence/config.ts)).
+
+| Running on                  | Without a database                                                   | With one        |
+| --------------------------- | -------------------------------------------------------------------- | --------------- |
+| `npm run dev` / `npm start` | Counts in the server process's memory                                | Counts in Redis |
+| Vercel                      | Counting is off: `/api/presence` answers `{"counts":null}`, no count | Counts in Redis |
+
+On another Node.js host with more than one server process, set the variables too: in-memory counters
+would only see their own process's share.
+
+### Free-tier budget
+
+Each ping costs 3 Redis commands, and a tab pings twice a minute — so **one open tab uses about 360
+commands an hour**. Upstash's Free plan includes **500,000 commands a month**
+([pricing](https://upstash.com/pricing/redis), checked November 2026): about **1,390 tab-hours a
+month**, or roughly two tabs open around the clock. Beyond that, pay-as-you-go costs $0.20 per 100,000
+commands — about $0.72 per 1,000 tab-hours. On the Free plan, Upstash rejects commands once the
+monthly limit is used up; `/api/presence` then answers without counts and the radio plays on.
+
+## Countdown
+
+A chip next to the station display counts down to the long-awaited return to the neon coast —
+“Return to the neon coast in 17d 04:12:33”, ticking every second in Heatwave's accent colour; under
+one day it shows just `hh:mm:ss`. Clicking it tunes to Heatwave, exactly like its preset.
+
+- Target day, labels and station live in [`src/config/countdown.ts`](src/config/countdown.ts).
+- The target is **midnight in the visitor's own time zone** on that day.
+- From that moment the chip shows “Out now” for 7 days (`outNowDays`); after that it is gone.
+
 ## Privacy by design
 
 |                       | Before consent                                                                          | After “Accept & tune in”                                                                                                                                          |
@@ -130,6 +193,7 @@ sequenceDiagram
 | Cookies               | None                                                                                    | YouTube may set its own cookies                                                                                                                                   |
 | Stored on your device | Nothing — after _Not now_, only that choice in `localStorage` (`neonpalms.consent.v1`)¹ | Your choice in `localStorage` (`neonpalms.consent.v1`)¹                                                                                                           |
 | Selected station      | Only in the page address (`?station=…`)                                                 | Only in the page address (`?station=…`)                                                                                                                           |
+| Listener count        | Station id to our own server every 30 s while the tab is visible — no ID, no cookie     | Station id to our own server every 30 s while the tab is visible — no ID, no cookie                                                                               |
 | Fonts                 | Self-hosted via `next/font`                                                             | Self-hosted via `next/font`                                                                                                                                       |
 
 ¹ If the track lists change while a page is open, it may reload itself into the new programme; it
@@ -141,6 +205,9 @@ notes the new version tag in `sessionStorage` so it can't reload in a loop.
   down immediately, in every open tab.
 - A Content-Security-Policy ([`next.config.ts`](next.config.ts)) only allows those two YouTube hosts as
   third parties. No analytics, no ads of our own, no tracking.
+- The [listener count](#listener-count) is anonymous by construction: no identifier exists, only a
+  number per station and 30-second window. Its database (Upstash, Frankfurt) is reached by our server,
+  never by your browser.
 
 ## Playing by YouTube's rules
 
@@ -168,15 +235,15 @@ npm run dev
 
 Then open <http://localhost:3000>.
 
-| Command                   | What it does                                                           |
-| ------------------------- | ---------------------------------------------------------------------- |
-| `npm run dev`             | Development server                                                     |
-| `npm run build`           | Production build                                                       |
-| `npm start`               | Serve the production build                                             |
-| `npm test`                | Unit tests (Vitest) — schedule, clock, consent, engine, UI helpers     |
-| `npm run typecheck`       | TypeScript check                                                       |
-| `npm run lint`            | ESLint                                                                 |
-| `npm run verify:playlist` | Re-checks every track on every station against YouTube (needs internet) |
+| Command                   | What it does                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `npm run dev`             | Development server                                                                 |
+| `npm run build`           | Production build                                                                   |
+| `npm start`               | Serve the production build                                                         |
+| `npm test`                | Unit tests (Vitest) — schedule, clock, consent, engine, listener count, UI helpers |
+| `npm run typecheck`       | TypeScript check                                                                   |
+| `npm run lint`            | ESLint                                                                             |
+| `npm run verify:playlist` | Re-checks every track on every station against YouTube (needs internet)            |
 
 > This project uses Next.js 16 with `cacheComponents`. Its APIs differ from older versions — the
 > bundled docs in `node_modules/next/dist/docs/` are the reference.
@@ -188,20 +255,23 @@ src/
 ├── app/
 │   ├── page.tsx                 # the radio
 │   ├── api/time/route.ts        # station clock (dynamic, never cached)
+│   ├── api/presence/route.ts    # listener count: one ping per visible tab and 30-s window
 │   ├── rotation/                # every station's tracks with links to the official videos
 │   ├── privacy/ · imprint/      # privacy policy and legal notice
 │   └── not-found.tsx            # “Dead air.”
 ├── components/
-│   ├── radio/                   # set, presets, controls, now playing, up next, ticker
+│   ├── radio/                   # set, presets, controls, now playing, up next, ticker, countdown
 │   │   └── scene/               # sun, palms, stars and grid (pure SVG/CSS)
 │   └── legal/                   # footer with privacy settings, legal page layout
 ├── config/
+│   ├── countdown.ts             # countdown chip: target day, labels, station it tunes to
 │   ├── site.ts                  # network name + operator details
 │   └── stations.ts              # the stations: name, dial, tagline, description, accent colour
 ├── data/stations/<id>.json      # each station's tracks
 ├── hooks/useRadio.ts            # React hook around the engine and the selected station
 └── lib/
     ├── consent.ts               # consent store (synced across tabs)
+    ├── presence/                # listener count: protocol, ping handler, Redis and in-memory store
     └── radio/
         ├── schedule.ts          # deterministic programme per station
         ├── clock.ts             # server clock offset
@@ -254,12 +324,13 @@ station is the default.
 ## Deploying
 
 The radio is made for **Vercel**: import the repository at
-[vercel.com/new](https://vercel.com/new) and deploy — no settings or environment variables needed.
-[`vercel.json`](vercel.json) runs the server functions (the station clock) in Frankfurt (`fra1`);
-pages are served from Vercel's global CDN.
+[vercel.com/new](https://vercel.com/new) and deploy — the radio itself needs no settings or
+environment variables. For the listener count, add the Upstash database described under
+[Turning it on](#turning-it-on). [`vercel.json`](vercel.json) runs the server functions (station clock
+and listener count) in Frankfurt (`fra1`); pages are served from Vercel's global CDN.
 
-Any other host works too as long as it runs Node.js (`npm run build` + `npm start`) — `/api/time`
-must answer every request live, so a static export won't work.
+Any other host works too as long as it runs Node.js (`npm run build` + `npm start`) — `/api/time` and
+`/api/presence` must answer every request live, so a static export won't work.
 
 **Running your own copy?**
 
@@ -268,6 +339,9 @@ must answer every request live, so a static export won't work.
       “Draft” note.
 - [ ] Read both legal pages once more — the hosting section describes Vercel. On another host,
       adjust it, including the legal basis if data leaves the EU/EEA.
+- [ ] The privacy policy's listener count section names Upstash and its Frankfurt region
+      ([`src/app/privacy/page.tsx`](src/app/privacy/page.tsx)). Using another store or region,
+      update it; running without a database, drop the Upstash paragraphs.
 - [ ] The legal notice cites § 18 (1) MStV for a private, non-commercial site. If the site becomes
       commercial, switch to § 5 DDG and add a second direct contact channel.
 - [ ] After deploying, check that the security headers are served and the player still starts.

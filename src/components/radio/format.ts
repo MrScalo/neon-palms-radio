@@ -18,3 +18,10 @@ export function secondsUntil(slot: Slot, current: Slot, elapsed: number): number
 export function slotKey(slot: Slot): string {
   return `${slot.stationId}:${slot.cycle}:${slot.index}`;
 }
+
+const COUNT_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+/** A listener count: "7", "1,234". */
+export function formatCount(count: number): string {
+  return COUNT_FORMAT.format(Number.isFinite(count) ? Math.max(0, count) : 0);
+}

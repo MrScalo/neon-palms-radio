@@ -17,6 +17,7 @@ const SECTIONS = [
   { id: "controller", title: "Who is responsible" },
   { id: "hosting", title: "Hosting and server log files" },
   { id: "station-clock", title: "The station clock" },
+  { id: "listener-count", title: "The listener count" },
   { id: "station-address", title: "The station in the page address" },
   { id: "consent-storage", title: "Remembering your choice" },
   { id: "youtube", title: "The YouTube player" },
@@ -24,6 +25,14 @@ const SECTIONS = [
   { id: "fonts", title: "Fonts" },
   { id: "rights", title: "Your rights" },
 ] as const;
+
+// Database of the listener count. The address is the one Upstash registered on the Data Privacy
+// Framework list; the region is the one chosen when the database was created (see README).
+const COUNTER_STORE = {
+  provider: "Upstash, Inc.",
+  address: "6202 Vía De Adrianna, San Jose, CA 95120, USA",
+  privacyPolicyUrl: "https://upstash.com/trust/privacy",
+} as const;
 
 export default function PrivacyPage() {
   return (
@@ -91,9 +100,9 @@ export default function PrivacyPage() {
         do not use it to identify you.
       </p>
       <p>
-        Our server functions (such as the station clock below) run in Vercel’s Frankfurt region in
-        Germany. Pages and files are delivered through Vercel’s global network from the location
-        nearest to you. Because {site.hosting.provider} is based in the USA, personal data may be
+        Our server functions (such as the station clock and the listener count below) run in
+        Vercel’s Frankfurt region in Germany. Pages and files are delivered through Vercel’s global
+        network from the location nearest to you. Because {site.hosting.provider} is based in the USA, personal data may be
         transferred there. Vercel is certified under the EU-U.S. Data Privacy Framework, for which
         the European Commission adopted an adequacy decision on 10 July 2023 (Art. 45 GDPR); in
         addition, the data processing agreement includes the EU Standard Contractual Clauses
@@ -127,6 +136,57 @@ export default function PrivacyPage() {
         (§ 25(2) no. 2 TDDDG).
       </p>
 
+      <h2 id="listener-count">The listener count</h2>
+      <p>
+        The radio shows how many people are tuned in right now, in total and for each station. To
+        count listeners without recognising anyone, the radio sends our own server a short request
+        (to the <code>/api/presence</code> endpoint) about every 30 seconds while it is open in a
+        browser tab you can see. The request contains nothing but the id of the station you have
+        selected, for example <code>{`{"station":"rearview"}`}</code>. It carries no identifier and
+        no cookie, nothing is read from your browser’s storage for it, and nothing is stored there.
+        A hidden tab sends no requests and drops out of the count within a minute.
+      </p>
+      <p>
+        For each request, our server adds 1 to a counter for that station and the current 30-second
+        window, and answers with the counts of the previous window — the numbers you see on the
+        page. A counter is only a number per station and time window: it does not record who was
+        counted and cannot tell one listener’s requests from another’s. Each counter is deleted
+        automatically two minutes after it was last increased.
+      </p>
+      <p>
+        The counters are stored in a database that <strong>{COUNTER_STORE.provider}</strong>,{" "}
+        {COUNTER_STORE.address}, runs for us in its Frankfurt region (AWS eu-central-1) in Germany,
+        as our processor under its data processing addendum (Art. 28 GDPR). Only our server
+        connects to this database. Your browser never contacts Upstash, so Upstash does not receive
+        your IP address or any other information about you.
+      </p>
+      <p>
+        The only personal data involved is what every request to our website carries — such as
+        your IP address and browser — which our hosting provider records in its log files as
+        described under <a href="#hosting">Hosting and server log files</a>. The legal basis is
+        Art. 6(1)(f) GDPR; our legitimate interest is to show a live listener count, so that the
+        radio feels like the shared broadcast it is.
+      </p>
+      <p>
+        We do not ask for your consent under § 25 TDDDG for the listener count: nothing is stored
+        on your device for it, and no information already stored there, such as cookies or browser
+        storage, is read. The request only contains the station you picked on the page and reaches
+        our server like any other request the page makes. Even if sending it were regarded as
+        access to your device, it would be strictly necessary to provide the listener count, which
+        is part of the radio you opened (§ 25(2) no. 2 TDDDG).
+      </p>
+      <p>
+        The counters stay in Upstash’s Frankfurt region. {COUNTER_STORE.provider} itself is based
+        in the USA. It is certified under the EU-U.S. Data Privacy Framework, for which the European
+        Commission adopted an adequacy decision on 10 July 2023 (Art. 45 GDPR); in addition, its data
+        processing addendum includes the EU Standard Contractual Clauses (Art. 46(2)(c) GDPR).
+        Details:{" "}
+        <a href={COUNTER_STORE.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
+          Upstash’s privacy policy
+        </a>
+        .
+      </p>
+
       <h2 id="station-address">The station in the page address</h2>
       <p>
         When you switch stations, the page address shows the one you picked — for example{" "}
@@ -137,8 +197,9 @@ export default function PrivacyPage() {
       <p>
         Like any page address, it can appear in the server log entries described above — as the
         requested address when you open such a link, or as the referrer of requests the page
-        makes afterwards, such as to the station clock. If you have allowed the YouTube player,
-        the page address Google receives (see below) can include the station as well.
+        makes afterwards, such as to the station clock or for the listener count. If you have
+        allowed the YouTube player, the page address Google receives (see below) can include the
+        station as well.
       </p>
 
       <h2 id="consent-storage">Remembering your choice</h2>
@@ -285,9 +346,9 @@ export default function PrivacyPage() {
       <h3>Right to object</h3>
       <p>
         <strong>
-          Where we process data on the basis of Art. 6(1)(f) GDPR (server log files, your stored
-          choice), you can object at any time on grounds relating to your particular situation
-          (Art. 21 GDPR).
+          Where we process data on the basis of Art. 6(1)(f) GDPR (server log files, the listener
+          count, your stored choice), you can object at any time on grounds relating to your
+          particular situation (Art. 21 GDPR).
         </strong>{" "}
         Just email <ContactEmail />.
       </p>
