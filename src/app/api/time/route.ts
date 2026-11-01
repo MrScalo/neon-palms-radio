@@ -2,8 +2,9 @@ import { connection } from "next/server";
 import { SCHEDULE_FINGERPRINT } from "@/lib/radio/schedule";
 
 /**
- * The station's reference clock. Every listener syncs to this so they all hear the same moment.
- * `schedule` tells pages loaded before a playlist change that they compute an outdated programme.
+ * The network's reference clock. Every listener syncs to this so everyone on a station hears the same moment.
+ * `schedule` fingerprints all stations' programmes, so pages loaded before a track list change
+ * on any station learn that they compute an outdated programme.
  */
 export async function GET(): Promise<Response> {
   // Under Cache Components a GET handler may be prerendered at build time; the time must be read per request.

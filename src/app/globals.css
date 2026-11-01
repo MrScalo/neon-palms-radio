@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Neon Palms FM design tokens. Names are a shared contract — extend, don't rename.
+ * Neon Palms Radio design tokens. Names are a shared contract — extend, don't rename.
  * Use as Tailwind utilities (bg-ink, text-neon-pink, font-script, …) or as CSS vars (var(--color-neon-pink)).
  */
 @theme {
@@ -27,6 +27,24 @@
   --font-lcd: var(--font-vt323), ui-monospace, monospace;
 }
 
+/*
+ * The selected station's accent colour. The radio root (RadioApp) sets it inline; registered as a
+ * colour so a station switch can fade it everywhere at once. In hand-written CSS use
+ * var(--station-accent) directly: unlike the utilities below, var(--color-station) would resolve
+ * on :root and miss the station.
+ */
+@property --station-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ff2fa0;
+}
+
+/* text-station, border-station/40, text-station-soft (lighter, for small text), … */
+@theme inline {
+  --color-station: var(--station-accent);
+  --color-station-soft: color-mix(in oklab, var(--station-accent) 78%, var(--color-cream));
+}
+
 :root {
   color-scheme: dark;
 }
@@ -46,6 +64,7 @@ body {
  *    -2  palm silhouettes                (ScenePalms, SunWindow)
  *   auto header, player, panels
  * The player screen itself never gets anything drawn on top of it while YouTube is loaded.
+ * Tuning static only ever shows on the idle screen (status "off").
  * ============================================================================================= */
 
 @layer base {
@@ -68,6 +87,8 @@ body {
   /* Shared geometry: the header height and the sun window decide where the horizon sits, so the
      backdrop (absolutely positioned) and the in-flow sun always meet on the same line. */
   .np-stage {
+    /* Faint, sparse static (white noise with a varying alpha) for the idle screen while tuning. */
+    --np-noise-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 -0.36'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
     --pad: 1rem;
     --header-h: 9.25rem;
     --sun-h: 8.5rem;
@@ -322,7 +343,11 @@ body {
     width: 280%;
     height: 4.5rem;
     translate: -50% 50%;
-    background: radial-gradient(closest-side, rgb(255 110 199 / 0.5), rgb(255 110 199 / 0));
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--station-accent) 35%, rgb(255 110 199 / 0.35)),
+      rgb(255 110 199 / 0)
+    );
   }
 
   .np-palm--window {
@@ -357,6 +382,12 @@ body {
     box-shadow: inset 0 1px 6px rgb(0 0 0 / 0.7);
     color: var(--color-neon-cyan);
     text-shadow: 0 0 8px rgb(34 230 255 / 0.55);
+  }
+
+  .np-lcd--station {
+    border-color: color-mix(in oklab, var(--station-accent) 35%, var(--color-plum));
+    color: color-mix(in oklab, var(--station-accent) 78%, var(--color-cream));
+    text-shadow: 0 0 8px color-mix(in oklab, var(--station-accent) 55%, transparent);
   }
 
   .np-lamp {
@@ -394,7 +425,7 @@ body {
       inset 0 1px 0 rgb(255 244 230 / 0.14),
       inset 0 -2px 0 rgb(0 0 0 / 0.45),
       0 0 0 1px rgb(11 6 24 / 0.9),
-      0 40px 80px -32px rgb(255 47 160 / 0.5),
+      0 40px 80px -32px color-mix(in oklab, var(--station-accent) 50%, transparent),
       0 30px 60px -24px rgb(0 0 0 / 0.8);
   }
 
@@ -406,16 +437,16 @@ body {
     bottom: -1px;
     height: 2px;
     border-radius: 9999px;
-    background: linear-gradient(90deg, transparent, var(--color-hot-pink), var(--color-sunset-orange), var(--color-hot-pink), transparent);
-    box-shadow: 0 0 14px rgb(255 47 160 / 0.7);
+    background: linear-gradient(90deg, transparent, var(--color-hot-pink), var(--station-accent), var(--color-hot-pink), transparent);
+    box-shadow: 0 0 14px color-mix(in oklab, var(--station-accent) 70%, transparent);
     pointer-events: none;
   }
 
   .np-bezel {
     border-radius: 1.125rem;
     padding: 2px;
-    background: linear-gradient(135deg, var(--color-neon-pink), var(--color-violet) 52%, var(--color-neon-cyan));
-    box-shadow: 0 0 26px -6px rgb(255 47 160 / 0.6);
+    background: linear-gradient(135deg, var(--station-accent), var(--color-violet) 52%, var(--color-neon-cyan));
+    box-shadow: 0 0 26px -6px color-mix(in oklab, var(--station-accent) 60%, transparent);
   }
 
   .np-bezel-inner {
@@ -513,6 +544,205 @@ body {
     pointer-events: none;
   }
 
+  /* Static on the idle screen while a switch settles. Only ever with status "off" (see RadioSet). */
+  .np-screen[data-tuning="true"] .np-screen-idle {
+    background-image: var(--np-noise-soft), radial-gradient(120% 95% at 50% 42%, #22103b 0%, #0e0619 55%, #05020a 100%);
+    background-size: 140px 140px, auto;
+  }
+
+  /* --- Station presets (under the controls) ------------------------------------------------- */
+
+  .np-tuner {
+    container: np-tuner / inline-size;
+    margin-top: 1rem;
+  }
+
+  @media (width >= 40rem) {
+    .np-tuner {
+      margin-top: 1.25rem;
+    }
+  }
+
+  /* Preset keys: stacked rows on narrow sets, three keys side by side from 32rem. */
+  .np-presets {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .np-preset {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "key name freq"
+      "key tagline tagline"
+      "key now now";
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+    padding: 0.625rem 0.875rem 0.625rem 0.625rem;
+    border-radius: 0.875rem;
+    border: 1px solid rgb(255 244 230 / 0.1);
+    background: linear-gradient(180deg, #2a1546 0%, #1a0c2e 55%, #140924 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 244 230 / 0.14),
+      0 3px 0 #07030d,
+      0 6px 14px -6px rgb(0 0 0 / 0.8);
+    color: var(--color-cream);
+    text-align: left;
+  }
+
+  .np-preset:hover {
+    border-color: color-mix(in oklab, var(--preset-accent) 45%, transparent);
+  }
+
+  .np-preset:active,
+  .np-preset[data-checked="true"] {
+    translate: 0 2px;
+  }
+
+  .np-preset:active {
+    box-shadow:
+      inset 0 1px 0 rgb(255 244 230 / 0.1),
+      0 1px 0 #07030d;
+  }
+
+  /* Latched in like a pressed car-radio key, glowing in the station's colour */
+  .np-preset[data-checked="true"] {
+    border-color: color-mix(in oklab, var(--preset-accent) 75%, transparent);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--preset-accent) 16%, #1f0f36), #120822);
+    box-shadow:
+      inset 0 1px 0 rgb(255 244 230 / 0.1),
+      0 1px 0 #07030d,
+      0 0 0 1px color-mix(in oklab, var(--preset-accent) 40%, transparent),
+      0 0 26px -4px color-mix(in oklab, var(--preset-accent) 55%, transparent);
+  }
+
+  /* Cyan default would vanish in a cyan station's glow. */
+  .np-preset:focus-visible {
+    outline-color: var(--color-cream);
+  }
+
+  .np-preset-key {
+    grid-area: key;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: var(--color-ink);
+    box-shadow:
+      inset 0 1px 4px rgb(0 0 0 / 0.8),
+      0 0 0 1px rgb(255 244 230 / 0.06);
+    color: color-mix(in oklab, var(--preset-accent) 80%, var(--color-cream));
+    font-family: var(--font-lcd);
+    font-size: 1.375rem;
+    line-height: 1;
+  }
+
+  .np-preset[data-checked="true"] .np-preset-key {
+    background: var(--preset-accent);
+    color: var(--color-ink);
+    box-shadow: 0 0 14px color-mix(in oklab, var(--preset-accent) 65%, transparent);
+  }
+
+  .np-preset-led {
+    display: none;
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 9999px;
+    background: rgb(255 244 230 / 0.12);
+  }
+
+  .np-preset[data-checked="true"] .np-preset-led {
+    background: var(--preset-accent);
+    box-shadow: 0 0 8px var(--preset-accent);
+  }
+
+  .np-preset-name {
+    grid-area: name;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    letter-spacing: 0.12em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .np-preset-freq {
+    grid-area: freq;
+    color: color-mix(in oklab, var(--preset-accent) 80%, var(--color-cream));
+    font-family: var(--font-lcd);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .np-preset-tagline {
+    grid-area: tagline;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .np-preset-now {
+    grid-area: now;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+    height: 1.25rem;
+    color: rgb(255 244 230 / 0.88);
+    font-size: 0.8125rem;
+  }
+
+  .np-preset-now-label {
+    flex: none;
+    color: color-mix(in oklab, var(--preset-accent) 80%, var(--color-cream));
+    font-family: var(--font-display);
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @container np-tuner (width >= 32rem) {
+    .np-presets {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(4, auto);
+      gap: 0 0.75rem;
+    }
+
+    /* Subgrid lines the rows up across the keys, whatever wraps. */
+    .np-preset {
+      grid-row: span 4;
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: subgrid;
+      grid-template-areas:
+        "key freq"
+        "name name"
+        "tagline tagline"
+        "now now";
+      align-items: start;
+      row-gap: 0.25rem;
+      padding: 0.75rem 0.875rem 0.75rem;
+    }
+
+    .np-preset-name {
+      margin-top: 0.375rem;
+    }
+
+    .np-preset-freq {
+      align-self: center;
+    }
+
+    .np-preset-led {
+      display: block;
+    }
+  }
+
   /* --- Panels & controls -------------------------------------------------------------------- */
 
   .np-panel {
@@ -605,6 +835,21 @@ body {
   .np-marquee-copy {
     display: none;
   }
+
+  /* Forced colours drop the glow, gradients and shadows that mark the selected preset; use
+     system colours instead (not an outline: :focus-visible already draws one). */
+  @media (forced-colors: active) {
+    .np-preset[data-checked="true"] {
+      border-color: Highlight;
+      border-width: 2px;
+    }
+
+    .np-preset[data-checked="true"] .np-preset-key {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
 }
 
 /* Motion lives only here, so prefers-reduced-motion gets a completely still page. */
@@ -663,6 +908,27 @@ body {
 
   [data-live="true"] .np-eq-bar {
     animation: np-eq var(--np-eq-duration, 0.9s) ease-in-out var(--np-eq-delay, 0s) infinite alternate;
+  }
+
+  /* Station switch: the accent fades everywhere and the new content fades in. Only once the
+     listener has switched: a station taken from the link appears at once instead of fading in. */
+  .np-radio[data-switched="true"] {
+    transition: --station-accent 600ms ease;
+  }
+
+  .np-radio[data-switched="true"] .np-swap-in {
+    animation: np-swap-in 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .np-preset {
+    transition:
+      translate 120ms ease,
+      border-color 200ms ease,
+      box-shadow 240ms ease;
+  }
+
+  .np-screen[data-tuning="true"] .np-screen-idle {
+    animation: np-static-screen 0.24s steps(3, jump-none) infinite;
   }
 
   .np-marquee {
@@ -783,6 +1049,23 @@ body {
   }
   to {
     transform: scaleY(1);
+  }
+}
+
+@keyframes np-swap-in {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
+
+/* Only the noise layer moves; the screen's gradient stays put. */
+@keyframes np-static-screen {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 61px -37px, 0 0;
   }
 }
 

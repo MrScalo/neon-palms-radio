@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Verifies YouTube video IDs for the radio playlist.
 // Usage: node scripts/verify-videos.mjs <videoId> [<videoId> ...]   → one JSON object per line
-//        node scripts/verify-videos.mjs --playlist                  → checks src/data/playlist.json
+//        node scripts/verify-videos.mjs --playlist                  → checks every station in src/data/stations/
 //          (also compares the stored duration with YouTube's lengthSeconds and the stored channel
 //          with the uploader's name; exits 1 on any problem)
 // Checks: owner channel + badges (official artist / verified), duration, embeddability
@@ -142,31 +142,55 @@ async function verify(videoId) {
   return out;
 }
 
+// YouTube sometimes omits channel badges or briefly refuses a request, so a problem is only
+// reported if a second look a moment later still sees it.
+async function verifySettled(videoId) {
+  const first = await verify(videoId);
+  if (first.problems.length === 0) return first;
+  await new Promise((r) => setTimeout(r, 1500));
+  const second = await verify(videoId);
+  return second.problems.length <= first.problems.length ? second : first;
+}
+
+function isBotCheck(result) {
+  return /not a bot/i.test(`${result.watchReason ?? ""} ${result.problems.join(" ")}`);
+}
+
 const args = process.argv.slice(2);
 
 if (args[0] === "--playlist") {
-  const { readFile } = await import("node:fs/promises");
-  const url = new URL("../src/data/playlist.json", import.meta.url);
-  const { tracks } = JSON.parse(await readFile(url, "utf8"));
+  const { readFile, readdir } = await import("node:fs/promises");
+  const dir = new URL("../src/data/stations/", import.meta.url);
+  const files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
   let failures = 0;
-  const seen = new Set();
-  for (const t of tracks) {
-    const r = await verify(t.id);
-    if (seen.has(t.id)) r.problems.push("duplicate id in playlist");
-    seen.add(t.id);
-    if (r.lengthSeconds && r.lengthSeconds !== t.duration)
-      r.problems.push(`duration mismatch: playlist ${t.duration}s, YouTube ${r.lengthSeconds}s`);
-    // The site shows `channel` as the official-source credit, so it must name the real uploader.
-    if (r.author && r.author !== t.channel)
-      r.problems.push(`channel mismatch: playlist "${t.channel}", YouTube "${r.author}"`);
-    // Badge-less label channels are allowed when the playlist documents why.
-    if (t.officialNote) r.problems = r.problems.filter((p) => p !== "channel not verified (no badge)");
-    const ok = r.problems.length === 0;
-    if (!ok) failures++;
-    console.log(`${ok ? "OK  " : "FAIL"} ${t.id}  ${t.artist} – ${t.title}  [${r.author ?? "?"}]${ok ? "" : "  → " + r.problems.join("; ")}`);
-    await new Promise((res) => setTimeout(res, 400));
+  let total = 0;
+  const seen = new Map();
+  for (const file of files) {
+    const station = file.replace(/\.json$/, "");
+    const { tracks } = JSON.parse(await readFile(new URL(file, dir), "utf8"));
+    console.log(`\n== ${station} (${tracks.length} tracks)`);
+    for (const t of tracks) {
+      total++;
+      const r = await verifySettled(t.id);
+      if (isBotCheck(r)) {
+        console.error("\nYouTube is asking for a bot check (too many requests). Try again later or from another network.");
+        process.exit(2);
+      }
+      if (seen.has(t.id)) r.problems.push(`duplicate id (also on ${seen.get(t.id)})`);
+      seen.set(t.id, station);
+      if (r.lengthSeconds && r.lengthSeconds !== t.duration)
+        r.problems.push(`duration mismatch: playlist ${t.duration}s, YouTube ${r.lengthSeconds}s`);
+      if (r.author && r.author !== t.channel)
+        r.problems.push(`channel mismatch: playlist "${t.channel}", YouTube "${r.author}"`);
+      // Badge-less official channels (labels, unmerged VEVO, artist channels, joint uploads) are allowed when the playlist documents why.
+      if (t.officialNote) r.problems = r.problems.filter((p) => p !== "channel not verified (no badge)");
+      const ok = r.problems.length === 0;
+      if (!ok) failures++;
+      console.log(`${ok ? "OK  " : "FAIL"} ${t.id}  ${t.artist} – ${t.title}  [${r.author ?? "?"}]${ok ? "" : "  → " + r.problems.join("; ")}`);
+      await new Promise((res) => setTimeout(res, 400));
+    }
   }
-  console.log(`\n${tracks.length - failures}/${tracks.length} tracks OK`);
+  console.log(`\n${total - failures}/${total} tracks OK`);
   process.exit(failures ? 1 : 0);
 }
 
@@ -175,6 +199,6 @@ if (args.length === 0) {
   process.exit(1);
 }
 for (const id of args) {
-  console.log(JSON.stringify(await verify(id)));
+  console.log(JSON.stringify(await verifySettled(id)));
   await new Promise((r) => setTimeout(r, 400));
 }

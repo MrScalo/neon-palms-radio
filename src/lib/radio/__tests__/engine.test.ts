@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vite
 import type { ConsentState } from "@/lib/consent";
 import { RadioEngine } from "../engine";
 import { getSlotAt, liveOffsetSeconds } from "../schedule";
-import type { RadioStatus, Slot } from "../types";
+import type { RadioStatus, Slot, Station, Track } from "../types";
 import { YT_NOCOOKIE_HOST, YTState, type YTNamespace, type YTPlayer, type YTPlayerOptions } from "../youtube";
 
 type Timer = ReturnType<typeof setTimeout>;
@@ -69,9 +69,7 @@ class FakePlayer implements YTPlayer {
 
   loadVideoById(request: VideoRequest): void {
     this.loads.push(request);
-    this.cancelPending();
-    this.videoId = request.videoId;
-    this.pos = request.startSeconds ?? 0;
+    this.startOver(request.videoId, request.startSeconds ?? 0);
     this.setState(YTState.UNSTARTED);
     const code = this.failLoadsWith;
     if (code !== null) {
@@ -83,9 +81,7 @@ class FakePlayer implements YTPlayer {
 
   cueVideoById(request: VideoRequest): void {
     this.cues.push(request);
-    this.cancelPending();
-    this.videoId = request.videoId;
-    this.pos = request.startSeconds ?? 0;
+    this.startOver(request.videoId, request.startSeconds ?? 0);
     this.setState(YTState.CUED);
   }
 
@@ -129,10 +125,16 @@ class FakePlayer implements YTPlayer {
 
   /** The listener picks another video inside the embed. */
   switchVideo(videoId: string): void {
+    this.startOver(videoId, 0);
+    this.bufferThenPlay();
+  }
+
+  /** Another video at `seconds`: the old one's playing time must not carry over. */
+  private startOver(videoId: string, seconds: number): void {
     this.cancelPending();
     this.videoId = videoId;
-    this.pos = 0;
-    this.bufferThenPlay();
+    this.since = null;
+    this.pos = seconds;
   }
 
   private bufferThenPlay(): void {
@@ -185,6 +187,28 @@ class FakeIntersectionObserver {
   }
 }
 
+function track(id: string, artist: string, duration: number): Track {
+  return { id, artist, title: `Song ${id}`, year: 1985, duration, channel: artist };
+}
+
+function station(id: string, tracks: Track[]): Station {
+  return { id, name: id, frequency: "88.6", tagline: "", description: "", accent: "#ff2fa0", tracks };
+}
+
+const HOME = station("home", [
+  track("homeTrack01", "Artist A", 214),
+  track("homeTrack02", "Artist B", 187),
+  track("homeTrack03", "Artist C", 263),
+  track("homeTrack04", "Artist D", 241),
+  track("homeTrack05", "Artist E", 198),
+]);
+const OTHER = station("other", [
+  track("otherTrk001", "Artist F", 231),
+  track("otherTrk002", "Artist G", 305),
+  track("otherTrk003", "Artist H", 176),
+  track("otherTrk004", "Artist I", 222),
+]);
+
 const api = { Player: FakePlayer } as unknown as YTNamespace;
 const host = { replaceChildren() {}, appendChild() {} } as unknown as HTMLDivElement;
 
@@ -194,15 +218,20 @@ let visibility: DocumentVisibilityState;
 let visibilityListeners: Set<() => void>;
 let loadApi: Mock<() => Promise<YTNamespace>>;
 
-function createEngine(): RadioEngine {
-  return new RadioEngine((status) => statuses.push(status), { now: () => Date.now(), loadApi, getConsent: () => consent });
+function createEngine(initial: Station = HOME): RadioEngine {
+  return new RadioEngine((status) => statuses.push(status), {
+    now: () => Date.now(),
+    loadApi,
+    getConsent: () => consent,
+    station: initial,
+  });
 }
 
 const lastStatus = () => statuses[statuses.length - 1];
 const player = () => FakePlayer.all[FakePlayer.all.length - 1];
 const observer = () => FakeIntersectionObserver.last!;
 const live = (slot: Slot) => liveOffsetSeconds(slot, Date.now());
-const nextSlot = (slot: Slot) => getSlotAt(slot.endsAt);
+const nextSlot = (slot: Slot, on: Station = HOME) => getSlotAt(slot.endsAt, on);
 
 function setVisibility(state: DocumentVisibilityState): void {
   visibility = state;
@@ -211,7 +240,7 @@ function setVisibility(state: DocumentVisibilityState): void {
 
 /** Tunes in `offsetMs` into a slot and lets it settle into "playing". */
 async function tunedIn(offsetMs = 10_000): Promise<{ engine: RadioEngine; slot: Slot; player: FakePlayer }> {
-  const slot = getSlotAt(Date.now());
+  const slot = getSlotAt(Date.now(), HOME);
   vi.setSystemTime(slot.startsAt + offsetMs);
   const engine = createEngine();
   engine.tuneIn(host);
@@ -253,7 +282,7 @@ afterEach(() => {
 
 describe("RadioEngine: staying live", () => {
   it("tunes in mid-slot at the live position", async () => {
-    const slot = getSlotAt(Date.now());
+    const slot = getSlotAt(Date.now(), HOME);
     vi.setSystemTime(slot.startsAt + 42_300);
     createEngine().tuneIn(host);
     expect(lastStatus()).toBe("connecting");
@@ -445,7 +474,7 @@ describe("RadioEngine: errors", () => {
 
   it("recovers within the same slot when the IFrame API fails to load once", async () => {
     loadApi.mockRejectedValueOnce(new Error("offline"));
-    const slot = getSlotAt(Date.now());
+    const slot = getSlotAt(Date.now(), HOME);
     vi.setSystemTime(slot.startsAt + 10_000);
     createEngine().tuneIn(host);
     await vi.advanceTimersByTimeAsync(1_000);
@@ -461,7 +490,7 @@ describe("RadioEngine: errors", () => {
   });
 
   it("retries with a new player when the player never becomes ready", async () => {
-    const slot = getSlotAt(Date.now());
+    const slot = getSlotAt(Date.now(), HOME);
     vi.setSystemTime(slot.startsAt + 10_000);
     const silent = {
       Player: class {
@@ -574,7 +603,7 @@ describe("RadioEngine: only plays where the listener can see it", () => {
   });
 
   it("holds a player that becomes ready in a hidden tab", async () => {
-    const slot = getSlotAt(Date.now());
+    const slot = getSlotAt(Date.now(), HOME);
     vi.setSystemTime(slot.startsAt + 10_000);
     createEngine().tuneIn(host);
     setVisibility("hidden");
@@ -623,6 +652,195 @@ describe("RadioEngine: only the scheduled video", () => {
 
     await vi.advanceTimersByTimeAsync(10_000);
     expect(p.loads).toHaveLength(1);
+    expect(lastStatus()).toBe("playing");
+  });
+});
+
+describe("RadioEngine: switching stations", () => {
+  /** 10 s into a HOME slot at which both HOME's and OTHER's songs have at least `margin` ms left. */
+  function calmMoment(margin = 60_000): number {
+    let slot = getSlotAt(Date.now(), HOME);
+    for (;;) {
+      const at = slot.startsAt + 10_000;
+      if (slot.endsAt - at >= margin && getSlotAt(at, OTHER).endsAt - at >= margin) return at;
+      slot = nextSlot(slot);
+    }
+  }
+
+  async function tunedInCalm(): Promise<{ engine: RadioEngine; player: FakePlayer }> {
+    vi.setSystemTime(calmMoment());
+    const engine = createEngine();
+    engine.tuneIn(host);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(lastStatus()).toBe("playing");
+    return { engine, player: player() };
+  }
+
+  it("loads the other station's live slot exactly once, right inside the click", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(p.loads).toHaveLength(0);
+
+    engine.setStation(OTHER);
+    const other = getSlotAt(Date.now(), OTHER);
+    expect(p.loads).toEqual([{ videoId: other.track.id, startSeconds: expect.any(Number) }]);
+    expect(p.loads[0].startSeconds).toBeCloseTo(live(other), 2);
+    expect(lastStatus()).toBe("buffering");
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+    expect(Math.abs(p.getCurrentTime() - live(other))).toBeLessThan(1);
+
+    await vi.advanceTimersByTimeAsync(other.endsAt - Date.now() - 1_000);
+    expect(p.loads).toHaveLength(1);
+    expect(FakePlayer.all).toHaveLength(1);
+
+    // From now on it follows the other station's schedule.
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(p.loads).toHaveLength(2);
+    expect(p.loads[1].videoId).toBe(nextSlot(other, OTHER).track.id);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+  });
+
+  it("does nothing when the selected station is chosen again", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    engine.setStation(HOME);
+    engine.setStation({ ...HOME });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(p.loads).toHaveLength(0);
+    expect(lastStatus()).toBe("playing");
+  });
+
+  it("only changes the selection while off, and tunes in to it later", async () => {
+    vi.setSystemTime(calmMoment());
+    const engine = createEngine();
+    engine.setStation(OTHER);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(loadApi).not.toHaveBeenCalled();
+    expect(FakePlayer.all).toHaveLength(0);
+    expect(statuses).toEqual([]);
+
+    engine.tuneIn(host);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const other = getSlotAt(Date.now(), OTHER);
+    expect(player().options.videoId).toBe(other.track.id);
+    expect(lastStatus()).toBe("playing");
+    expect(Math.abs(player().getCurrentTime() - live(other))).toBeLessThan(1);
+  });
+
+  it("does not touch a torn-down player when switching after tuneOut", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    engine.tuneOut();
+    const count = statuses.length;
+    engine.setStation(OTHER);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(p.loads).toHaveLength(0);
+    expect(FakePlayer.all).toHaveLength(1);
+    expect(statuses).toHaveLength(count);
+  });
+
+  it("always loads on a switch, even when both stations are at the same cycle and index", async () => {
+    const soloA = station("solo-a", [track("soloTrackAA", "Solo A", 240)]);
+    const soloB = station("solo-b", [track("soloTrackBB", "Solo B", 240)]);
+    const start = getSlotAt(Date.now(), soloA);
+    vi.setSystemTime(start.startsAt + 10_000);
+    const engine = createEngine(soloA);
+    engine.tuneIn(host);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(lastStatus()).toBe("playing");
+
+    const a = getSlotAt(Date.now(), soloA);
+    const b = getSlotAt(Date.now(), soloB);
+    expect([b.cycle, b.index]).toEqual([a.cycle, a.index]);
+    engine.setStation(soloB);
+    expect(player().loads).toEqual([{ videoId: "soloTrackBB", startSeconds: expect.any(Number) }]);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+  });
+
+  it("starts the other station when the listener had paused", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    p.pauseVideo();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(lastStatus()).toBe("paused");
+
+    engine.setStation(OTHER);
+    expect(p.loads).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+    expect(p.videoId).toBe(getSlotAt(Date.now(), OTHER).track.id);
+  });
+
+  it("forgets the old station's failures and retries", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    p.error(150);
+    expect(lastStatus()).toBe("signal-lost");
+
+    engine.setStation(OTHER);
+    expect(p.loads).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+
+    p.failLoadsWith = 5;
+    p.error(5);
+    expect(lastStatus()).toBe("buffering");
+    p.failLoadsWith = null;
+    engine.setStation(HOME);
+    expect(p.loads).toHaveLength(2);
+    expect(p.loads[1].videoId).toBe(getSlotAt(Date.now(), HOME).track.id);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(p.loads).toHaveLength(2);
+  });
+
+  it("only cues the other station in a hidden tab", async () => {
+    const { engine, player: p } = await tunedInCalm();
+    setVisibility("hidden");
+    expect(lastStatus()).toBe("paused");
+
+    engine.setStation(OTHER);
+    const other = getSlotAt(Date.now(), OTHER);
+    expect(p.loads).toHaveLength(0);
+    expect(p.cues).toEqual([{ videoId: other.track.id, startSeconds: expect.any(Number) }]);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(lastStatus()).toBe("paused");
+    expect(p.plays).toBe(1);
+
+    setVisibility("visible");
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(lastStatus()).toBe("playing");
+    expect(Math.abs(p.getCurrentTime() - live(other))).toBeLessThan(1);
+  });
+
+  it("brings a player that is still coming up straight to the other station", async () => {
+    vi.setSystemTime(calmMoment());
+    const engine = createEngine();
+    engine.tuneIn(host);
+    await vi.advanceTimersByTimeAsync(0);
+    const p = player();
+    expect(p.options.videoId).toBe(getSlotAt(Date.now(), HOME).track.id);
+
+    engine.setStation(OTHER);
+    expect(lastStatus()).toBe("connecting");
+    await vi.advanceTimersByTimeAsync(2_000);
+    const other = getSlotAt(Date.now(), OTHER);
+    expect(p.loads).toEqual([{ videoId: other.track.id, startSeconds: expect.any(Number) }]);
+    expect(lastStatus()).toBe("playing");
+    expect(Math.abs(p.getCurrentTime() - live(other))).toBeLessThan(1);
+    expect(FakePlayer.all).toHaveLength(1);
+  });
+
+  it("creates the player for the other station when switched while the IFrame API loads", async () => {
+    vi.setSystemTime(calmMoment());
+    const engine = createEngine();
+    engine.tuneIn(host);
+    engine.setStation(OTHER);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(loadApi).toHaveBeenCalledTimes(1);
+    expect(player().options.videoId).toBe(getSlotAt(Date.now(), OTHER).track.id);
+    expect(player().loads).toHaveLength(0);
     expect(lastStatus()).toBe("playing");
   });
 });

@@ -1,7 +1,8 @@
+import { getStation } from "@/config/stations";
 import { getYouTubeConsent, type ConsentState } from "@/lib/consent";
 import { stationNow } from "./clock";
 import { getSlotAt, liveOffsetSeconds } from "./schedule";
-import type { RadioStatus, Slot } from "./types";
+import type { RadioStatus, Slot, Station } from "./types";
 import { loadYouTubeIframeApi, YT_NOCOOKIE_HOST, YTState, type YTNamespace, type YTPlayer } from "./youtube";
 
 export const DEFAULT_VOLUME = 80;
@@ -31,10 +32,13 @@ export type RadioEngineDeps = {
   now?: () => number;
   loadApi?: () => Promise<YTNamespace>;
   getConsent?: () => ConsentState;
+  /** Station selected at start; the default station when omitted. */
+  station?: Station;
 };
 
+/** Includes the station, so switching stations always loads even when cycle and index happen to match. */
 function slotKey(slot: Slot): string {
-  return `${slot.cycle}:${slot.index}`;
+  return `${slot.stationId}:${slot.cycle}:${slot.index}`;
 }
 
 function clearTimer(timer: Timer | null): null {
@@ -78,17 +82,24 @@ export class RadioEngine {
   private readyTimer: Timer | null = null;
   private volume = DEFAULT_VOLUME;
   private muted = false;
+  private station: Station;
   private readonly now: () => number;
   private readonly loadApi: () => Promise<YTNamespace>;
   private readonly getConsent: () => ConsentState;
 
   constructor(
     private readonly onStatus: (status: RadioStatus) => void,
-    { now = stationNow, loadApi = loadYouTubeIframeApi, getConsent = getYouTubeConsent }: RadioEngineDeps = {},
+    {
+      now = stationNow,
+      loadApi = loadYouTubeIframeApi,
+      getConsent = getYouTubeConsent,
+      station = getStation(null),
+    }: RadioEngineDeps = {},
   ) {
     this.now = now;
     this.loadApi = loadApi;
     this.getConsent = getConsent;
+    this.station = station;
   }
 
   tuneIn(host: HTMLDivElement | null): void {
@@ -131,6 +142,43 @@ export class RadioEngine {
     this.setStatus("off");
   }
 
+  /**
+   * Switches to `station`. While tuned in, call it from a click or key handler: its live slot
+   * starts right away, inside the listener's gesture. While off, it only changes the selection.
+   */
+  setStation(station: Station): void {
+    if (station.id === this.station.id && station.tracks === this.station.tracks) return;
+    this.station = station;
+    if (!this.active) return;
+
+    // Failures and corrections counted on the old station say nothing about the new one.
+    this.failedKey = null;
+    this.retryAt = null;
+    this.retryKey = null;
+    this.retryAttempts = 0;
+    this.lastCorrectionAt = Number.NEGATIVE_INFINITY;
+    this.heldForVisibility = false;
+    this.gestureTimer = clearTimer(this.gestureTimer);
+
+    if (!this.player || !this.ready) {
+      // A player that is still to be created or coming up starts on the selected station.
+      this.setStatus(this.hasPlayed ? "buffering" : "connecting");
+      this.sync();
+      return;
+    }
+    const now = this.now();
+    const slot = getSlotAt(now, station);
+    // Even a click must not start playback in a hidden tab (keyboard shortcut, media key).
+    if (document.visibilityState === "visible") {
+      this.setStatus(this.hasPlayed ? "buffering" : "connecting");
+      this.loadSlot(slot, now);
+    } else {
+      this.cueSlot(slot, now);
+    }
+    // Not a full sync: right after loadVideoById the player may still report the old video as playing.
+    this.scheduleSync(slot, now);
+  }
+
   resume(): void {
     if (!this.active || !this.player || !this.ready) return;
     if (this.status !== "paused" && this.status !== "needs-gesture") return;
@@ -165,7 +213,7 @@ export class RadioEngine {
       () => {
         if (generation !== this.generation) return;
         this.loading = false;
-        this.retrySlot(slotKey(getSlotAt(this.now())));
+        this.retrySlot(slotKey(getSlotAt(this.now(), this.station)));
       },
     );
   }
@@ -179,7 +227,7 @@ export class RadioEngine {
     host.appendChild(mount);
 
     const now = this.now();
-    const slot = getSlotAt(now);
+    const slot = getSlotAt(now, this.station);
     const key = slotKey(slot);
     this.loadedKey = key;
     this.ready = false;
@@ -258,7 +306,7 @@ export class RadioEngine {
       this.resumeLive();
     } else {
       const now = this.now();
-      this.cueSlot(getSlotAt(now), now);
+      this.cueSlot(getSlotAt(now, this.station), now);
     }
   }
 
@@ -373,16 +421,22 @@ export class RadioEngine {
 
   // --- Keeping on air ----------------------------------------------------------------------
 
+  /** Next sync in a second at the latest, and just after `slot` ends. */
+  private scheduleSync(slot: Slot, now: number): void {
+    this.syncTimer = clearTimer(this.syncTimer);
+    const untilNextSlot = slot.endsAt - now + SLOT_EDGE_DELAY_MS;
+    this.syncTimer = setTimeout(this.sync, Math.max(50, Math.min(SYNC_INTERVAL_MS, untilNextSlot)));
+  }
+
   /** Runs every second (and on every player event): follows slot changes and corrects drift. */
   private readonly sync = (): void => {
     this.syncTimer = clearTimer(this.syncTimer);
     if (!this.active) return;
 
     const now = this.now();
-    const slot = getSlotAt(now);
+    const slot = getSlotAt(now, this.station);
     const key = slotKey(slot);
-    const untilNextSlot = slot.endsAt - now + SLOT_EDGE_DELAY_MS;
-    this.syncTimer = setTimeout(this.sync, Math.max(50, Math.min(SYNC_INTERVAL_MS, untilNextSlot)));
+    this.scheduleSync(slot, now);
 
     if (key === this.failedKey) {
       // Signal lost on this slot: wait for the next one, or for the pending retry.
@@ -436,7 +490,7 @@ export class RadioEngine {
   /** Plays the live position: loads the slot on air if it changed, otherwise jumps back to live. */
   private resumeLive(): void {
     const now = this.now();
-    const slot = getSlotAt(now);
+    const slot = getSlotAt(now, this.station);
     this.heldForVisibility = false;
     this.setStatus(this.hasPlayed ? "buffering" : "connecting");
     if (slotKey(slot) !== this.loadedKey) {

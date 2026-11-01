@@ -1,23 +1,38 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { DEFAULT_STATION_ID, getStation, STATIONS } from "@/config/stations";
 import { useYouTubeConsent } from "@/lib/consent";
 import { getServerSchedule, useScheduleOutdated, useStationNow } from "@/lib/radio/clock";
 import { clampVolume, DEFAULT_VOLUME, RadioEngine } from "@/lib/radio/engine";
-import { getSlotAt, getUpcoming, liveOffsetSeconds } from "@/lib/radio/schedule";
-import type { RadioStatus, Slot } from "@/lib/radio/types";
+import { getOnAir, getUpcoming, liveOffsetSeconds } from "@/lib/radio/schedule";
+import type { RadioStatus, Slot, Station } from "@/lib/radio/types";
 
 export type Radio = {
   status: RadioStatus;
-  /** null only before the first client tick */
+  /** All stations of the network, in preset order. */
+  stations: readonly Station[];
+  /** The selected station. */
+  station: Station;
+  /**
+   * Selects a station; unknown ids are ignored. Call from a click or key handler: while tuned
+   * in, the station's live position starts right away, inside the listener's gesture.
+   */
+  setStation(id: string): void;
+  /** Slot on air on the selected station; null only before the first client tick */
   current: Slot | null;
-  /** next 3 slots */
+  /** next 3 slots of the selected station */
   upcoming: Slot[];
+  /**
+   * Slot on air on every station, by station id; null only before the first client tick.
+   * Keeps its identity until a station's song changes.
+   */
+  onAir: ReadonlyMap<string, Slot> | null;
   /** whole seconds into the current track (from the station clock, valid even when off) */
   elapsed: number;
   /** 0..100 */
   volume: number;
   muted: boolean;
   /**
-   * The station's programme changed after this page loaded, so this page no longer matches
+   * A station's programme changed after this page loaded, so this page no longer matches
    * other listeners. It reloads by itself once tuned out; never while tuned in.
    */
   stationUpdated: boolean;
@@ -33,6 +48,7 @@ export type Radio = {
 };
 
 const UPCOMING_COUNT = 3;
+const DEFAULT_STATION = getStation(DEFAULT_STATION_ID);
 const RELOADED_FOR_KEY = "neonpalms.reloadedFor";
 
 /** Reloads into the new programme, at most once per server schedule so stale cached HTML can't cause a reload loop. */
@@ -49,7 +65,7 @@ function reloadForNewSchedule(): void {
   window.location.reload();
 }
 
-/** The station: shared schedule, live position and the YouTube player. Use exactly once. */
+/** The network: shared schedules, the selected station, live position and the YouTube player. Use exactly once. */
 export function useRadio(): Radio {
   const { consent } = useYouTubeConsent();
   const now = useStationNow(1000);
@@ -58,7 +74,8 @@ export function useRadio(): Radio {
   const [status, setStatus] = useState<RadioStatus>("off");
   const [volume, setVolumeState] = useState(DEFAULT_VOLUME);
   const [muted, setMutedState] = useState(false);
-  const [engine] = useState(() => new RadioEngine(setStatus));
+  const [station, setStationState] = useState(DEFAULT_STATION);
+  const [engine] = useState(() => new RadioEngine(setStatus, { station: DEFAULT_STATION }));
 
   // Consent withdrawn (here, in the footer or in another tab): YouTube has to go immediately.
   useEffect(() => {
@@ -72,9 +89,24 @@ export function useRadio(): Radio {
     if (stationUpdated && status === "off") reloadForNewSchedule();
   }, [stationUpdated, status]);
 
-  const current = useMemo(() => (now === null ? null : getSlotAt(now)), [now]);
-  const upcoming = useMemo(() => (current ? getUpcoming(current.startsAt, UPCOMING_COUNT) : []), [current]);
+  const onAir = useMemo(() => (now === null ? null : getOnAir(now, STATIONS)), [now]);
+  const current = onAir?.get(station.id) ?? null;
+  const upcoming = useMemo(
+    () => (current ? getUpcoming(current.startsAt, UPCOMING_COUNT, station) : []),
+    [current, station],
+  );
   const elapsed = current !== null && now !== null ? Math.floor(liveOffsetSeconds(current, now)) : 0;
+
+  const setStation = useCallback(
+    (id: string) => {
+      const next = getStation(id);
+      if (next.id !== id) return;
+      // Synchronously, so the switch happens inside the listener's click.
+      engine.setStation(next);
+      setStationState(next);
+    },
+    [engine],
+  );
 
   const tuneIn = useCallback(() => engine.tuneIn(playerHostRef.current), [engine]);
   const tuneOut = useCallback(() => engine.tuneOut(), [engine]);
@@ -96,8 +128,12 @@ export function useRadio(): Radio {
   return useMemo(
     () => ({
       status,
+      stations: STATIONS,
+      station,
+      setStation,
       current,
       upcoming,
+      onAir,
       elapsed,
       volume,
       muted,
@@ -109,6 +145,22 @@ export function useRadio(): Radio {
       setVolume,
       toggleMute,
     }),
-    [status, current, upcoming, elapsed, volume, muted, stationUpdated, tuneIn, tuneOut, resume, setVolume, toggleMute],
+    [
+      status,
+      station,
+      setStation,
+      current,
+      upcoming,
+      onAir,
+      elapsed,
+      volume,
+      muted,
+      stationUpdated,
+      tuneIn,
+      tuneOut,
+      resume,
+      setVolume,
+      toggleMute,
+    ],
   );
 }

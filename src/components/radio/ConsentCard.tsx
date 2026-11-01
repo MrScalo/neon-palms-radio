@@ -30,8 +30,8 @@ export function ConsentCard({ consent, onAccept, onDecline, acceptRef, nudge }: 
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-cream/90">
           {declined
-            ? "No problem, nothing has been loaded from YouTube. The station keeps running below, and you can switch the sound on whenever you like."
-            : "Every song on Neon Palms FM plays in an embedded YouTube player. Nothing loads from YouTube until you click."}
+            ? "No problem, nothing has been loaded from YouTube. The stations keep running below, and you can switch the sound on whenever you like."
+            : "Every song on Neon Palms Radio plays in an embedded YouTube player. Nothing loads from YouTube until you click."}
         </p>
         <p className="mt-2 text-[0.8125rem] leading-relaxed text-muted sm:text-sm">
           Clicking loads YouTube’s player script from youtube.com and the player in privacy-enhanced mode from

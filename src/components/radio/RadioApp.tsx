@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from "react";
+import { DEFAULT_STATION_ID } from "@/config/stations";
 import { useRadio } from "@/hooks/useRadio";
 import { useYouTubeConsent } from "@/lib/consent";
 import { ConsentCard } from "./ConsentCard";
@@ -8,9 +17,13 @@ import { ControlsBar } from "./ControlsBar";
 import { NowPlaying } from "./NowPlaying";
 import { RadioSet } from "./RadioSet";
 import { StationHeader } from "./StationHeader";
+import { playStaticBurst, staticPeakGain } from "./staticBurst";
+import { reconcileAddress, withStationParam } from "./stationUrl";
+import { Tuner } from "./Tuner";
 import { TuneInCard } from "./TuneInCard";
 import { UpNext } from "./UpNext";
 import { useNowPlayingTitle } from "./useNowPlayingTitle";
+import { prefersReducedMotion, useTuning } from "./useTuning";
 
 type RadioAppProps = {
   /** Decorative sun window, rendered on the server and slotted into the grid. */
@@ -28,7 +41,7 @@ function keepFocus(target: RefObject<HTMLButtonElement | null>): void {
   });
 }
 
-/** The station page's interactive part. Owns the single useRadio() instance. */
+/** The radio page's interactive part. Owns the single useRadio() instance. */
 export function RadioApp({ scenery }: RadioAppProps) {
   const radio = useRadio();
   const { consent, grant, deny } = useYouTubeConsent();
@@ -37,13 +50,39 @@ export function RadioApp({ scenery }: RadioAppProps) {
   const pendingTuneIn = useRef(false);
   const wasOff = useRef(true);
   const [nudge, setNudge] = useState(0);
+  // Tied to the station it is about, so it goes quiet once the address picks another one.
+  const [announcement, setAnnouncement] = useState({ stationId: "", text: "" });
+  const { event: tuneEvent, tuning, startTuning } = useTuning();
 
-  const { status, current, upcoming, elapsed } = radio;
+  const { status, station, stations, setStation, current, upcoming, elapsed } = radio;
   const off = status === "off";
   const playing = status === "playing";
   const remaining = current ? Math.max(0, current.track.duration - elapsed) : 0;
 
-  useNowPlayingTitle(playing && current ? current.track : null);
+  useNowPlayingTitle(playing && current ? current.track : null, station);
+
+  // The server always renders the default station, and Next keeps this page alive (hidden) while
+  // the listener is on another page. So on first load and every time the page shows again, line the
+  // station up with the address: a link or Back/Forward naming a station wins; a bare "/" gets the
+  // kept station written back. Hiding the page tuned out, so no gesture is needed here.
+  const syncWithAddress = useEffectEvent(() => {
+    const action = reconcileAddress(window.location.search, stations, station.id, DEFAULT_STATION_ID);
+    if (action === null) return;
+    if ("select" in action) {
+      setStation(action.select);
+      return;
+    }
+    try {
+      window.history.replaceState(null, "", withStationParam(window.location.href, action.writeParam));
+    } catch {
+      // The link is a convenience.
+    }
+  });
+
+  // Effects re-run when Next shows the kept page again, which is exactly when to check.
+  useEffect(() => {
+    syncWithAddress();
+  }, []);
 
   // Safety net for "Accept & tune in": should tuneIn() ever read consent from React state that
   // hasn't caught up with grant() yet, tune in as soon as it has.
@@ -92,22 +131,50 @@ export function RadioApp({ scenery }: RadioAppProps) {
     }
   }
 
+  function switchStation(id: string) {
+    const next = stations.find((item) => item.id === id);
+    if (next === undefined || next.id === station.id) return;
+    // First thing in the gesture: tuned in, the new station's video may only start from inside it.
+    setStation(next.id);
+    const reducedMotion = prefersReducedMotion();
+    if (!off) playStaticBurst(staticPeakGain(radio.volume, radio.muted, reducedMotion));
+    startTuning(!reducedMotion);
+    const slot = radio.onAir?.get(next.id);
+    setAnnouncement({
+      stationId: next.id,
+      text: slot
+        ? `Now on ${next.name}, ${next.frequency} FM: ${slot.track.title} by ${slot.track.artist}.`
+        : `Now on ${next.name}, ${next.frequency} FM.`,
+    });
+    try {
+      window.history.replaceState(null, "", withStationParam(window.location.href, next.id));
+    } catch {
+      // Browsers throttle history updates when keys are held down; the link is a convenience.
+    }
+  }
+
   const screenCard =
     consent === "granted" ? (
-      <TuneInCard onTuneIn={radio.tuneIn} />
+      <TuneInCard stationName={station.name} onTuneIn={radio.tuneIn} />
     ) : (
       <ConsentCard consent={consent} onAccept={acceptAndTuneIn} onDecline={decline} acceptRef={acceptRef} nudge={nudge} />
     );
 
   return (
-    <>
-      <StationHeader live={playing} />
+    <div
+      className="np-radio flex flex-1 flex-col"
+      data-station={station.id}
+      data-switched={tuneEvent !== null}
+      style={{ "--station-accent": station.accent } as CSSProperties}
+    >
+      <StationHeader live={playing} station={station} />
       <main id="main" className="np-container np-main flex-1 pb-14 lg:pb-20">
         {scenery}
         <RadioSet
           status={status}
           playerHostRef={radio.playerHostRef}
           screenCard={screenCard}
+          tuning={tuning}
           controls={
             <ControlsBar
               status={status}
@@ -122,12 +189,21 @@ export function RadioApp({ scenery }: RadioAppProps) {
               powerRef={powerRef}
             />
           }
+          tuner={
+            <Tuner
+              stations={stations}
+              station={station}
+              onAir={radio.onAir}
+              announcement={announcement.stationId === station.id ? announcement.text : ""}
+              onSelect={switchStation}
+            />
+          }
         />
         <div className="mt-2 grid content-start gap-5 [grid-area:info] md:grid-cols-2 lg:mt-0 lg:grid-cols-1 lg:gap-6">
-          <NowPlaying current={current} elapsed={elapsed} live={playing} />
-          <UpNext current={current} upcoming={upcoming} elapsed={elapsed} />
+          <NowPlaying station={station} current={current} elapsed={elapsed} live={playing} />
+          <UpNext station={station} current={current} upcoming={upcoming} elapsed={elapsed} />
         </div>
       </main>
-    </>
+    </div>
   );
 }

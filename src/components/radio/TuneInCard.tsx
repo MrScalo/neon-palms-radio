@@ -1,7 +1,7 @@
 import { PowerIcon } from "./icons";
 
 /** Shown in the screen once YouTube is allowed but this visitor isn't listening yet. */
-export function TuneInCard({ onTuneIn }: { onTuneIn(): void }) {
+export function TuneInCard({ stationName, onTuneIn }: { stationName: string; onTuneIn(): void }) {
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
       <button
@@ -17,7 +17,7 @@ export function TuneInCard({ onTuneIn }: { onTuneIn(): void }) {
         </span>
       </button>
       <p className="max-w-xs text-sm leading-relaxed text-muted">
-        You join at the live position, in sync with everyone listening.
+        You join {stationName} at the live position, in sync with everyone listening.
       </p>
     </div>
   );

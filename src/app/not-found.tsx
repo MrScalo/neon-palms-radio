@@ -36,14 +36,14 @@ export default function NotFound() {
         </h1>
         <p className="mt-4 max-w-md text-lg leading-relaxed text-muted">
           Nothing is broadcasting on this frequency. The page you tuned in to doesn’t exist — or
-          it drifted off into the night.
+          it drifted off into the night. The rest of {site.name} is still on air.
         </p>
 
         <Link
           href="/"
           className="mt-10 inline-flex items-center gap-2 rounded-full border border-neon-pink bg-neon-pink/10 px-6 py-3 font-display text-sm tracking-[0.15em] text-cream uppercase shadow-[0_0_20px_rgb(255_47_160/0.35)] transition hover:bg-neon-pink/20 hover:shadow-[0_0_28px_rgb(255_47_160/0.55)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan"
         >
-          ← Tune back to {site.frequency}
+          ← Back to the radio
         </Link>
       </main>
 

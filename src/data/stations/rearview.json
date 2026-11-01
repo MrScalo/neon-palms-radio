@@ -1,0 +1,709 @@
+{
+  "tracks": [
+    {
+      "id": "O_WLw_0DFQQ",
+      "artist": "Blondie",
+      "title": "Atomic",
+      "year": 1979,
+      "duration": 255,
+      "channel": "BlondieVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "WGU_4-5RaxU",
+      "artist": "Blondie",
+      "title": "Heart of Glass",
+      "year": 1979,
+      "duration": 222,
+      "channel": "BlondieVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "Im3JzxlatUs",
+      "artist": "Gary Numan",
+      "title": "Cars",
+      "year": 1979,
+      "duration": 230,
+      "channel": "Beggars Banquet Records",
+      "officialNote": "Beggars Banquet released Cars in 1979; @BeggarsArchive describes itself as the Beggars Banquet official channel and links to archive.beggars.com.",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "W8r-tXRLazs",
+      "artist": "The Buggles",
+      "title": "Video Killed the Radio Star",
+      "year": 1979,
+      "duration": 201,
+      "channel": "TheBugglesVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "xik-y0xlpZ0",
+      "artist": "The Cure",
+      "title": "A Forest",
+      "year": 1980,
+      "duration": 282,
+      "channel": "TheCureVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "5jhocSCSZzk",
+      "artist": "Foreigner",
+      "title": "Waiting for a Girl Like You",
+      "year": 1981,
+      "duration": 299,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "80TfG7C9azA",
+      "artist": "Kim Wilde",
+      "title": "Kids in America",
+      "year": 1981,
+      "duration": 209,
+      "channel": "Kim Wilde",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "pNj9bXKGOiI",
+      "artist": "Luther Vandross",
+      "title": "Never Too Much",
+      "year": 1981,
+      "duration": 231,
+      "channel": "LutherVandrossVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "YkADj0TPrJA",
+      "artist": "Phil Collins",
+      "title": "In the Air Tonight",
+      "year": 1981,
+      "duration": 283,
+      "channel": "Phil Collins",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "iIpfWORQWhU",
+      "artist": "A Flock of Seagulls",
+      "title": "I Ran (So Far Away)",
+      "year": 1982,
+      "duration": 238,
+      "channel": "AFlockOfSeagullsVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "gOK3rqVgN2I",
+      "artist": "A Flock of Seagulls",
+      "title": "Space Age Love Song",
+      "year": 1982,
+      "duration": 204,
+      "channel": "AFlockOfSeagullsVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "yRYFKcMa_Ek",
+      "artist": "Daryl Hall & John Oates",
+      "title": "Maneater",
+      "year": 1982,
+      "duration": 265,
+      "channel": "hallandoatesVEVO",
+      "heardIn": "In-game radio · 2009"
+    },
+    {
+      "id": "XJyKTNdPL5s",
+      "artist": "INXS",
+      "title": "The One Thing",
+      "year": 1982,
+      "duration": 204,
+      "channel": "INXS Videos",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "PJwt2dxx9yg",
+      "artist": "Joe Jackson",
+      "title": "Steppin' Out",
+      "year": 1982,
+      "duration": 217,
+      "channel": "JoeJacksonVEVO",
+      "heardIn": "In-game radio · 2002, 2013"
+    },
+    {
+      "id": "nNEb2k_EmMg",
+      "artist": "Laura Branigan",
+      "title": "Gloria",
+      "year": 1982,
+      "duration": 232,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "Zi_XLOBDo_Y",
+      "artist": "Michael Jackson",
+      "title": "Billie Jean",
+      "year": 1982,
+      "duration": 296,
+      "channel": "michaeljacksonVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "1WDly1Oc_P4",
+      "artist": "Missing Persons",
+      "title": "Destination Unknown",
+      "year": 1982,
+      "duration": 212,
+      "channel": "MissingPersonsVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "ZInRE-KryGA",
+      "artist": "Pat Benatar",
+      "title": "Shadows of the Night",
+      "year": 1982,
+      "duration": 283,
+      "channel": "PatBenatarVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "bpA_5a0miWk",
+      "artist": "Roxy Music",
+      "title": "Avalon",
+      "year": 1982,
+      "duration": 253,
+      "channel": "RoxyMusicVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "kOnde5c7OG8",
+      "artist": "Roxy Music",
+      "title": "More Than This",
+      "year": 1982,
+      "duration": 254,
+      "channel": "RoxyMusicVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "ZaPTELylZ1s",
+      "artist": "The Motels",
+      "title": "Only the Lonely",
+      "year": 1982,
+      "duration": 194,
+      "channel": "TheMotelsVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "LGD9i718kBU",
+      "artist": "The Psychedelic Furs",
+      "title": "Love My Way",
+      "year": 1982,
+      "duration": 212,
+      "channel": "PsychedelicFursVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "FTQbiNvZqaY",
+      "artist": "Toto",
+      "title": "Africa",
+      "year": 1982,
+      "duration": 271,
+      "channel": "TotoVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "_sQGwDeambg",
+      "artist": "Yazoo",
+      "title": "Don't Go",
+      "year": 1982,
+      "duration": 166,
+      "channel": "Yazoo / Yaz - Official",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "X2LTL8KgKv8",
+      "artist": "Corey Hart",
+      "title": "Sunglasses at Night",
+      "year": 1983,
+      "duration": 234,
+      "channel": "CoreyHartVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "1t-gK-9EIq4",
+      "artist": "Depeche Mode",
+      "title": "Everything Counts",
+      "year": 1983,
+      "duration": 239,
+      "channel": "DepecheModeVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "Yem_iEHiyJ0",
+      "artist": "Frankie Goes to Hollywood",
+      "title": "Relax",
+      "year": 1983,
+      "duration": 250,
+      "channel": "FGTHVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "wXJ5IHwBLrA",
+      "artist": "Lionel Richie",
+      "title": "Running with the Night",
+      "year": 1983,
+      "duration": 349,
+      "channel": "LionelRichieVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "YYtBF1OVciU",
+      "artist": "Naked Eyes",
+      "title": "Promises, Promises",
+      "year": 1983,
+      "duration": 226,
+      "channel": "NakedEyesOfficVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "hZXxmhok1AU",
+      "artist": "New Order",
+      "title": "Age of Consent",
+      "year": 1983,
+      "duration": 317,
+      "channel": "New Order",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "c1GxjzHm5us",
+      "artist": "New Order",
+      "title": "Blue Monday",
+      "year": 1983,
+      "duration": 451,
+      "channel": "New Order",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "IGVZOLV9SPo",
+      "artist": "Pat Benatar",
+      "title": "Love Is a Battlefield",
+      "year": 1983,
+      "duration": 318,
+      "channel": "PatBenatarVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "yo0uTu2uLtI",
+      "artist": "Rick Springfield",
+      "title": "Human Touch",
+      "year": 1983,
+      "duration": 270,
+      "channel": "RickSpringfieldVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "FxSsol3Zd7k",
+      "artist": "Robert Plant",
+      "title": "Big Log",
+      "year": 1983,
+      "duration": 363,
+      "channel": "Robert Plant",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "ntG50eXbBtc",
+      "artist": "Spandau Ballet",
+      "title": "Gold",
+      "year": 1983,
+      "duration": 232,
+      "channel": "spandauballet",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "fAPu6fN_ypQ",
+      "artist": "Thompson Twins",
+      "title": "Love on Your Side",
+      "year": 1983,
+      "duration": 215,
+      "channel": "Thompson Twins",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "V-xpJRwIA-Q",
+      "artist": "Wang Chung",
+      "title": "Dance Hall Days",
+      "year": 1983,
+      "duration": 235,
+      "channel": "WangChungVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "Ae829mFAGGE",
+      "artist": "ZZ Top",
+      "title": "Gimme All Your Lovin'",
+      "year": 1983,
+      "duration": 279,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "o2n-blwYJ4s",
+      "artist": "Alison Moyet",
+      "title": "Love Resurrection",
+      "year": 1984,
+      "duration": 235,
+      "channel": "AlisonMoyetVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "hIs5StN8J-0",
+      "artist": "Animotion",
+      "title": "Obsession",
+      "year": 1984,
+      "duration": 241,
+      "channel": "AnimotionVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "nCBASt507WA",
+      "artist": "Bryan Adams",
+      "title": "Run to You",
+      "year": 1984,
+      "duration": 225,
+      "channel": "BryanAdamsVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "621Nk3Ubz4A",
+      "artist": "Dan Hartman",
+      "title": "I Can Dream About You",
+      "year": 1984,
+      "duration": 266,
+      "channel": "DanHartmanVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "D00M2KZH1J0",
+      "artist": "Daryl Hall & John Oates",
+      "title": "Out of Touch",
+      "year": 1984,
+      "duration": 274,
+      "channel": "hallandoatesVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "r3Pr1_v7hsw",
+      "artist": "Foreigner",
+      "title": "I Want to Know What Love Is",
+      "year": 1984,
+      "duration": 301,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "xqF1P8Khnmw",
+      "artist": "Howard Jones",
+      "title": "Like to Get to Know You Well",
+      "year": 1984,
+      "duration": 254,
+      "channel": "Howard Jones",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "k9e157Ner90",
+      "artist": "John Waite",
+      "title": "Missing You",
+      "year": 1984,
+      "duration": 242,
+      "channel": "JohnWaiteVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "RP0_8J7uxhs",
+      "artist": "Laura Branigan",
+      "title": "Self Control",
+      "year": 1984,
+      "duration": 308,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "cTLTG4FTNBQ",
+      "artist": "Nik Kershaw",
+      "title": "Wouldn't It Be Good",
+      "year": 1984,
+      "duration": 292,
+      "channel": "NikKershawVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "JkRKT6T0QLg",
+      "artist": "Philip Bailey & Phil Collins",
+      "title": "Easy Lover",
+      "year": 1984,
+      "duration": 287,
+      "channel": "PhilipBaileyVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "PE1lzqJCeJ0",
+      "artist": "Philip Oakey & Giorgio Moroder",
+      "title": "Together in Electric Dreams",
+      "year": 1984,
+      "duration": 230,
+      "channel": "PhilOakeyVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "azdwsXLmrHE",
+      "artist": "Queen",
+      "title": "Radio Ga Ga",
+      "year": 1984,
+      "duration": 353,
+      "channel": "Queen Official",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "47y5bo8wtqM",
+      "artist": "Scandal feat. Patty Smyth",
+      "title": "The Warrior",
+      "year": 1984,
+      "duration": 234,
+      "channel": "ScandalVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "cFH5JgyZK1I",
+      "artist": "Talk Talk",
+      "title": "It's My Life",
+      "year": 1984,
+      "duration": 242,
+      "channel": "Talk Talk band",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "h8N_XCwFdY8",
+      "artist": "Wham!",
+      "title": "Everything She Wants",
+      "year": 1984,
+      "duration": 303,
+      "channel": "WhamVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "FrkEDe6Ljqs",
+      "artist": "Commodores",
+      "title": "Nightshift",
+      "year": 1985,
+      "duration": 279,
+      "channel": "CommodoresVEVO",
+      "heardIn": "In-game radio · 2006"
+    },
+    {
+      "id": "6a_PRcVYX7g",
+      "artist": "Godley & Creme",
+      "title": "Cry",
+      "year": 1985,
+      "duration": 241,
+      "channel": "GodleyCremeVEVO",
+      "officialNote": "GodleyCremeVEVO is the duo's own VEVO channel (the label-operated official music-video channel); unmerged VEVO channels show no badge.",
+      "heardIn": "In-game radio · 2008"
+    },
+    {
+      "id": "nKhN1t_7PEY",
+      "artist": "Mr. Mister",
+      "title": "Broken Wings",
+      "year": 1985,
+      "duration": 289,
+      "channel": "MrMisterVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "p3j2NYZ8FKs",
+      "artist": "Pet Shop Boys",
+      "title": "West End Girls",
+      "year": 1985,
+      "duration": 234,
+      "channel": "PetShopBoys Parlophone",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "tytPcvyJASc",
+      "artist": "Simple Minds",
+      "title": "All the Things She Said",
+      "year": 1985,
+      "duration": 256,
+      "channel": "SimpleMindsVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "IDI2WQJyE7I",
+      "artist": "Starship",
+      "title": "We Built This City",
+      "year": 1985,
+      "duration": 298,
+      "channel": "Starship",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "aYrgcUojxLE",
+      "artist": "Stevie Nicks",
+      "title": "I Can't Wait",
+      "year": 1985,
+      "duration": 255,
+      "channel": "Stevie Nicks",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "Kc71KZG87X4",
+      "artist": "Survivor",
+      "title": "Burning Heart",
+      "year": 1985,
+      "duration": 230,
+      "channel": "SurvivorVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "l3VqAsMXE7o",
+      "artist": "Talk Talk",
+      "title": "Life's What You Make It",
+      "year": 1985,
+      "duration": 258,
+      "channel": "Talk Talk band",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "4N1iwQxiHrs",
+      "artist": "The Outfield",
+      "title": "Your Love",
+      "year": 1985,
+      "duration": 253,
+      "channel": "TheOutfieldVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "6dOwHzCHfgA",
+      "artist": "Cutting Crew",
+      "title": "(I Just) Died in Your Arms",
+      "year": 1986,
+      "duration": 271,
+      "channel": "CuttingCrewVEVO",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "T7c6wL5UFl4",
+      "artist": "Jan Hammer",
+      "title": "Crockett's Theme",
+      "year": 1986,
+      "duration": 208,
+      "channel": "Jan Hammer",
+      "officialNote": "Jan Hammer's own official channel: janhammer.com links to this exact channel ID (UCtb1SfrMvGayeYGQdf-PWhg).",
+      "heardIn": "In-game radio · 2002"
+    },
+    {
+      "id": "siwpn14IE7E",
+      "artist": "Kenny Loggins",
+      "title": "Danger Zone",
+      "year": 1986,
+      "duration": 226,
+      "channel": "KennyLogginsVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "k9olaIio3l8",
+      "artist": "Steve Winwood",
+      "title": "Higher Love",
+      "year": 1986,
+      "duration": 254,
+      "channel": "SteveWinwoodVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "IIOJdMdS56k",
+      "artist": "Swing Out Sister",
+      "title": "Breakout",
+      "year": 1986,
+      "duration": 227,
+      "channel": "SwingOutSisterVEVO",
+      "heardIn": "In-game radio · 2009"
+    },
+    {
+      "id": "hgpXSoWBAVA",
+      "artist": "Belinda Carlisle",
+      "title": "Circle in the Sand",
+      "year": 1987,
+      "duration": 219,
+      "channel": "Belinda Carlisle",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "azfG5H-pCVg",
+      "artist": "INXS",
+      "title": "New Sensation",
+      "year": 1987,
+      "duration": 251,
+      "channel": "INXS Videos",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "SwrYMWoqg5w",
+      "artist": "T'Pau",
+      "title": "Heart and Soul",
+      "year": 1987,
+      "duration": 246,
+      "channel": "TPauVEVO",
+      "heardIn": "In-game radio · 2009"
+    },
+    {
+      "id": "Ud6sU3AclT4",
+      "artist": "Taylor Dayne",
+      "title": "Tell It to My Heart",
+      "year": 1987,
+      "duration": 221,
+      "channel": "TaylorDayneVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "RhxF9Qg5mOU",
+      "artist": "Boy Meets Girl",
+      "title": "Waiting for a Star to Fall",
+      "year": 1988,
+      "duration": 270,
+      "channel": "BoyMeetsGirlVEVO",
+      "heardIn": "In-game radio · 2009"
+    },
+    {
+      "id": "eAByAzEkI1c",
+      "artist": "Roxette",
+      "title": "The Look",
+      "year": 1988,
+      "duration": 232,
+      "channel": "Roxette",
+      "heardIn": "In-game radio · 2009"
+    },
+    {
+      "id": "tT4d1LQy4es",
+      "artist": "Alannah Myles",
+      "title": "Black Velvet",
+      "year": 1989,
+      "duration": 291,
+      "channel": "AlannahMylesVEVO",
+      "heardIn": "In-game radio · 2013"
+    },
+    {
+      "id": "u1xrNaTO1bI",
+      "artist": "Depeche Mode",
+      "title": "Personal Jesus",
+      "year": 1989,
+      "duration": 226,
+      "channel": "DepecheModeVEVO",
+      "heardIn": "In-game radio · 2004"
+    },
+    {
+      "id": "zWd__w5UWVc",
+      "artist": "Jane Child",
+      "title": "Don't Wanna Fall in Love",
+      "year": 1989,
+      "duration": 250,
+      "channel": "RHINO",
+      "heardIn": "In-game radio · 2013"
+    }
+  ]
+}

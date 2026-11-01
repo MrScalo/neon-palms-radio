@@ -1,15 +1,15 @@
 /**
- * Station identity plus the legal details shown in the legal notice and the privacy policy.
+ * Network identity plus the legal details shown in the legal notice and the privacy policy.
+ * The stations themselves (names, frequencies, tracks) live in src/config/stations.ts.
  *
  * Running your own copy? Replace the operator and hosting details with your own. A value in
  * square brackets counts as a placeholder: while any remains, `isOperatorConfigured` is false
  * and the legal pages show a "Draft" warning.
  */
 export const site = {
-  name: "Neon Palms FM",
-  frequency: "88.6 FM",
-  tagline: "Neon nights. Endless summer.",
-  location: "the Sunset Coast",
+  name: "Neon Palms Radio",
+  /** The neon script part of the logo; the logo adds "Radio" next to it. */
+  wordmark: "Neon Palms",
   operator: {
     name: "Nico Peitz",
     street: "Mettlerkampsweg 28",
@@ -26,6 +26,9 @@ export const site = {
     logRetention: "one hour",
   },
 } as const;
+
+/** Shown in the footer and the legal notice. */
+export const FAN_PROJECT_DISCLAIMER = `${site.name} is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or sponsored by any video game publisher or developer, by YouTube or Google, or by any of the artists or record labels whose music it plays.`;
 
 export function isPlaceholder(value: string): boolean {
   return /^\[.*\]$/.test(value.trim());

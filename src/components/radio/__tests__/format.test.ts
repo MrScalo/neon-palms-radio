@@ -5,7 +5,7 @@ import { formatClock, secondsUntil, slotKey } from "../format";
 const track: Track = { id: "x", artist: "Artist", title: "Title", year: 1986, duration: 200, channel: "Artist" };
 
 function slot(startsAt: number, index = 0): Slot {
-  return { track, cycle: 3, index, startsAt, endsAt: startsAt + track.duration * 1000 };
+  return { stationId: "neonpalms", track, cycle: 3, index, startsAt, endsAt: startsAt + track.duration * 1000 };
 }
 
 describe("formatClock", () => {
@@ -41,7 +41,11 @@ describe("secondsUntil", () => {
 });
 
 describe("slotKey", () => {
-  it("identifies an airing by cycle and position", () => {
-    expect(slotKey(slot(0, 4))).toBe("3:4");
+  it("identifies an airing by station, cycle and position", () => {
+    expect(slotKey(slot(0, 4))).toBe("neonpalms:3:4");
+  });
+
+  it("tells the same position on two stations apart", () => {
+    expect(slotKey({ ...slot(0, 4), stationId: "heatwave" })).not.toBe(slotKey(slot(0, 4)));
   });
 });

@@ -9,12 +9,36 @@ export type Track = {
   duration: number;
   /** Name of the official YouTube channel that uploaded the video (shown as credit). */
   channel: string;
-  /** Only set for label channels without a verified badge: why this channel is official. */
+  /**
+   * Only for an official upload that YouTube shows without a badge (label channel, unmerged VEVO
+   * channel, the artist's own unbadged channel, joint upload): why the channel is official.
+   * verify-videos.mjs accepts a missing badge only with this note.
+   */
   officialNote?: string;
+  /** Short, discreet note on where the song was heard, e.g. "Trailer 2 · 2025" or "In-game radio · 2002". */
+  heardIn?: string;
+};
+
+/** One station of the network. Each station runs its own shared schedule over its own tracks. */
+export type Station = {
+  /** URL-safe id, also the data file name in src/data/stations/ */
+  id: string;
+  name: string;
+  /** Dial frequency in MHz, e.g. "107.7" */
+  frequency: string;
+  /** Short, catchy line shown on the preset button */
+  tagline: string;
+  /** One or two discreet sentences on what kind of songs the station plays */
+  description: string;
+  /** Accent colour of the station (any CSS colour) */
+  accent: string;
+  tracks: readonly Track[];
 };
 
 /** One scheduled airing of a track. All times are station-clock milliseconds since the Unix epoch. */
 export type Slot = {
+  /** Id of the station this slot airs on. */
+  stationId: string;
   track: Track;
   /** Rotation cycle number (each cycle plays every track exactly once). */
   cycle: number;

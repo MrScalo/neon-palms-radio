@@ -1,18 +1,16 @@
-import playlistData from "@/data/playlist.json";
-import type { Slot, Track } from "./types";
+import { STATIONS } from "@/config/stations";
+import type { Slot, Station, Track } from "./types";
 
 /**
- * The station's shared schedule. Every visitor computes the same programme from the same
- * playlist and the same (server-synced) clock, so no backend state is needed.
+ * The network's shared schedules. Every visitor computes the same programme for each station
+ * from the same tracks and the same (server-synced) clock, so no backend state is needed.
  * Pure module: time is always passed in.
  */
 
 export const STATION_EPOCH_MS: number = Date.UTC(2026, 0, 1);
 
-export const PLAYLIST: Track[] = playlistData.tracks;
-
 /** Bump whenever the shuffle or slot algorithm changes, so open tabs learn they compute an outdated programme. */
-export const SCHEDULE_VERSION = 1;
+export const SCHEDULE_VERSION = 2;
 
 const CACHE_SIZE = 6;
 const SLOT_CACHE_SIZE = 16;
@@ -24,6 +22,10 @@ type CycleOrder = {
 };
 
 type Prepared = {
+  stationId: string;
+  tracks: readonly Track[];
+  /** Mixed into every cycle seed so each station shuffles differently. */
+  stationHash: number;
   cycleMs: number;
   shuffles: Lru<number, readonly Track[]>;
   orders: Lru<number, CycleOrder>;
@@ -53,44 +55,52 @@ class Lru<K, V> {
   }
 }
 
-const preparedByPlaylist = new WeakMap<readonly Track[], Prepared>();
+const preparedByStation = new Map<string, Prepared>();
 
-function prepare(tracks: readonly Track[]): Prepared {
-  const cached = preparedByPlaylist.get(tracks);
-  if (cached) return cached;
+function prepare(station: Station): Prepared {
+  const { id, tracks } = station;
+  const cached = preparedByStation.get(id);
+  // Same id with another track list (tests, hot reload): the old caches no longer apply.
+  if (cached && cached.tracks === tracks) return cached;
 
   if (tracks.length === 0) {
-    throw new Error("Neon Palms FM: the playlist is empty — add at least one track to src/data/playlist.json.");
+    throw new Error(
+      `Neon Palms Radio: station "${id}" has no tracks — add at least one to src/data/stations/${id}.json.`,
+    );
   }
   let cycleMs = 0;
   for (const track of tracks) {
     if (!Number.isInteger(track.duration) || track.duration <= 0) {
       throw new Error(
-        `Neon Palms FM: track "${track.id}" has an invalid duration (${track.duration}); expected a positive whole number of seconds.`,
+        `Neon Palms Radio: station "${id}": track "${track.id}" has an invalid duration (${track.duration}); ` +
+          "expected a positive whole number of seconds.",
       );
     }
     cycleMs += track.duration * 1000;
   }
 
   const prepared: Prepared = {
+    stationId: id,
+    tracks,
+    stationHash: hashText(id),
     cycleMs,
     shuffles: new Lru(CACHE_SIZE),
     orders: new Lru(CACHE_SIZE),
     slots: new Lru(SLOT_CACHE_SIZE),
   };
-  preparedByPlaylist.set(tracks, prepared);
+  preparedByStation.set(id, prepared);
   return prepared;
 }
 
 function assertCycle(cycle: number): void {
   if (!Number.isSafeInteger(cycle)) {
-    throw new RangeError(`Neon Palms FM: cycle must be a safe integer, got ${cycle}.`);
+    throw new RangeError(`Neon Palms Radio: cycle must be a safe integer, got ${cycle}.`);
   }
 }
 
 function assertTime(stationNowMs: number): void {
   if (!Number.isFinite(stationNowMs)) {
-    throw new RangeError(`Neon Palms FM: station time must be a finite number, got ${stationNowMs}.`);
+    throw new RangeError(`Neon Palms Radio: station time must be a finite number, got ${stationNowMs}.`);
   }
 }
 
@@ -98,8 +108,26 @@ function assertTime(stationNowMs: number): void {
 // Only 32-bit integer ops (Math.imul, shifts) and exact divisions, so every JS engine
 // produces bit-identical results.
 
-/** Mixes any safe integer (including negatives) into a 32-bit seed. */
-function hashCycle(cycle: number): number {
+/** FNV-1a over UTF-16 code units, 32 bit unsigned. */
+function fnv1a(text: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/** A well-mixed 32-bit hash of a station id. */
+function hashText(text: string): number {
+  let h = fnv1a(text);
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+/** Mixes any safe integer cycle (including negatives) and a station hash into a 32-bit seed. */
+function cycleSeed(stationHash: number, cycle: number): number {
   const hi = Math.floor(cycle / 0x1_0000_0000);
   const lo = cycle - hi * 0x1_0000_0000;
   let h = (lo ^ 0x9e3779b9) >>> 0;
@@ -108,6 +136,12 @@ function hashCycle(cycle: number): number {
   h ^= h >>> 16;
   h = Math.imul(h ^ (hi | 0) ^ 0x27d4eb2f, 0x165667b1);
   h ^= h >>> 15;
+  // The station goes in after the cycle is fully mixed, so neighbouring cycles of different
+  // stations don't line up.
+  h = Math.imul(h ^ stationHash, 0x9e3779b1);
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
   return h >>> 0;
 }
 
@@ -122,11 +156,11 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-function shuffled(prepared: Prepared, tracks: readonly Track[], cycle: number): readonly Track[] {
+function shuffled(prepared: Prepared, cycle: number): readonly Track[] {
   const cached = prepared.shuffles.get(cycle);
   if (cached) return cached;
-  const random = mulberry32(hashCycle(cycle));
-  const result = tracks.slice();
+  const random = mulberry32(cycleSeed(prepared.stationHash, cycle));
+  const result = prepared.tracks.slice();
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     const tmp = result[i];
@@ -217,15 +251,15 @@ function spaceArtists(items: readonly Track[], left: string | null, right: strin
  * That makes the boundary neighbour of cycle n (the tail of cycle n-1) computable from
  * cycle n-1's shuffle alone, so no cycle's order ever depends recursively on another's.
  */
-function orderFor(prepared: Prepared, tracks: readonly Track[], cycle: number): CycleOrder {
+function orderFor(prepared: Prepared, cycle: number): CycleOrder {
   const cached = prepared.orders.get(cycle);
   if (cached) return cached;
 
-  const raw = shuffled(prepared, tracks, cycle);
+  const raw = shuffled(prepared, cycle);
   let ordered: readonly Track[] = raw;
   if (raw.length > 2) {
     const tail = raw[raw.length - 1];
-    const previousTail = shuffled(prepared, tracks, cycle - 1)[raw.length - 1];
+    const previousTail = shuffled(prepared, cycle - 1)[raw.length - 1];
     const head = spaceArtists(raw.slice(0, -1), artistKey(previousTail), artistKey(tail));
     ordered = [...head, tail];
   }
@@ -236,24 +270,25 @@ function orderFor(prepared: Prepared, tracks: readonly Track[], cycle: number): 
   return prepared.orders.set(cycle, { tracks: ordered, offsets });
 }
 
-/** The play order of a rotation cycle: every track exactly once, deterministic in every browser. */
-export function cycleOrder(cycle: number, tracks: Track[] = PLAYLIST): Track[] {
+/** The play order of a station's rotation cycle: every track exactly once, deterministic in every browser. */
+export function cycleOrder(cycle: number, station: Station): Track[] {
   assertCycle(cycle);
-  return orderFor(prepare(tracks), tracks, cycle).tracks.slice();
+  return orderFor(prepare(station), cycle).tracks.slice();
 }
 
 // --- Slots -------------------------------------------------------------------------------
 
 /** Slots are cached and frozen so the same airing keeps the same object identity. */
-function slotFor(prepared: Prepared, tracks: readonly Track[], cycle: number, index: number): Slot {
+function slotFor(prepared: Prepared, cycle: number, index: number): Slot {
   const key = `${cycle}:${index}`;
   const cached = prepared.slots.get(key);
   if (cached) return cached;
 
-  const order = orderFor(prepared, tracks, cycle);
+  const order = orderFor(prepared, cycle);
   const track = order.tracks[index];
   const startsAt = STATION_EPOCH_MS + cycle * prepared.cycleMs + order.offsets[index];
   const slot: Slot = Object.freeze({
+    stationId: prepared.stationId,
     track,
     cycle,
     index,
@@ -263,10 +298,10 @@ function slotFor(prepared: Prepared, tracks: readonly Track[], cycle: number, in
   return prepared.slots.set(key, slot);
 }
 
-/** The slot on air at `stationNowMs`. Boundaries are half-open: at exactly `endsAt` the next slot is current. */
-export function getSlotAt(stationNowMs: number, tracks: Track[] = PLAYLIST): Slot {
+/** The slot on air on `station` at `stationNowMs`. Boundaries are half-open: at exactly `endsAt` the next slot is current. */
+export function getSlotAt(stationNowMs: number, station: Station): Slot {
   assertTime(stationNowMs);
-  const prepared = prepare(tracks);
+  const prepared = prepare(station);
   const { cycleMs } = prepared;
 
   const sinceEpoch = stationNowMs - STATION_EPOCH_MS;
@@ -281,7 +316,7 @@ export function getSlotAt(stationNowMs: number, tracks: Track[] = PLAYLIST): Slo
     position -= cycleMs;
   }
 
-  const { offsets } = orderFor(prepared, tracks, cycle);
+  const { offsets } = orderFor(prepared, cycle);
   // Largest index whose start offset is <= position.
   let low = 0;
   let high = offsets.length - 2;
@@ -290,44 +325,53 @@ export function getSlotAt(stationNowMs: number, tracks: Track[] = PLAYLIST): Slo
     if (offsets[mid] <= position) low = mid;
     else high = mid - 1;
   }
-  return slotFor(prepared, tracks, cycle, low);
+  return slotFor(prepared, cycle, low);
 }
 
-/** The next `count` slots after the one on air at `stationNowMs`, crossing cycle boundaries. */
-export function getUpcoming(stationNowMs: number, count: number, tracks: Track[] = PLAYLIST): Slot[] {
-  const prepared = prepare(tracks);
+/** The next `count` slots on `station` after the one on air at `stationNowMs`, crossing cycle boundaries. */
+export function getUpcoming(stationNowMs: number, count: number, station: Station): Slot[] {
+  const prepared = prepare(station);
   const upcoming: Slot[] = [];
-  let { cycle, index } = getSlotAt(stationNowMs, tracks);
+  let { cycle, index } = getSlotAt(stationNowMs, station);
   for (let i = 0; i < count; i++) {
     index += 1;
-    if (index >= tracks.length) {
+    if (index >= prepared.tracks.length) {
       cycle += 1;
       index = 0;
     }
-    upcoming.push(slotFor(prepared, tracks, cycle, index));
+    upcoming.push(slotFor(prepared, cycle, index));
   }
   return upcoming;
 }
 
+let lastOnAir: ReadonlyMap<string, Slot> | null = null;
+
+/**
+ * The slot on air on every station, by station id. Returns the previous map as long as no
+ * station's song has changed, so it can be compared by reference.
+ */
+export function getOnAir(stationNowMs: number, stations: readonly Station[]): ReadonlyMap<string, Slot> {
+  const slots = stations.map((station) => getSlotAt(stationNowMs, station));
+  const previous = lastOnAir;
+  const unchanged =
+    previous !== null && previous.size === slots.length && slots.every((slot) => previous.get(slot.stationId) === slot);
+  if (unchanged) return previous;
+  lastOnAir = new Map(slots.map((slot) => [slot.stationId, slot]));
+  return lastOnAir;
+}
+
 // --- Fingerprint -------------------------------------------------------------------------
 
-/** FNV-1a, 32 bit, as 8 hex digits. */
-function fnv1a(text: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
+/** Identifies the programmes computed for `stations`: everything their slots depend on goes in. */
+export function scheduleFingerprint(stations: readonly Station[]): string {
+  const programme = stations
+    .map(({ id, tracks }) => `${id}=${tracks.map((t) => `${t.id}:${t.duration}:${artistKey(t)}`).join(",")}`)
+    .join(";");
+  return fnv1a(`${SCHEDULE_VERSION}|${STATION_EPOCH_MS}|${programme}`).toString(16).padStart(8, "0");
 }
 
-/** Identifies the programme computed from `tracks`: everything the slots depend on goes in. */
-export function scheduleFingerprint(tracks: readonly Track[] = PLAYLIST): string {
-  return fnv1a(`${SCHEDULE_VERSION}|${STATION_EPOCH_MS}|${tracks.map((t) => `${t.id}:${t.duration}`).join(",")}`);
-}
-
-/** The programme this build airs. The server reports its own via /api/time so outdated tabs notice. */
-export const SCHEDULE_FINGERPRINT: string = scheduleFingerprint(PLAYLIST);
+/** The programmes this build airs. The server reports its own via /api/time so outdated tabs notice. */
+export const SCHEDULE_FINGERPRINT: string = scheduleFingerprint(STATIONS);
 
 /** Fractional seconds since the slot started, clamped to [0, duration]. */
 export function liveOffsetSeconds(slot: Slot, stationNowMs: number): number {

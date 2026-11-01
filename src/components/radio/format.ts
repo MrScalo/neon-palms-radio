@@ -14,6 +14,7 @@ export function secondsUntil(slot: Slot, current: Slot, elapsed: number): number
   return Math.max(0, Math.round((slot.startsAt - current.startsAt) / 1000 - elapsed));
 }
 
+/** Identifies one airing; unique across stations, so a switch never reuses another station's row. */
 export function slotKey(slot: Slot): string {
-  return `${slot.cycle}:${slot.index}`;
+  return `${slot.stationId}:${slot.cycle}:${slot.index}`;
 }

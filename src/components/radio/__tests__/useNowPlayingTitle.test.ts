@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { claimTitle } from "../useNowPlayingTitle";
+import { claimTitle, nowPlayingTitle } from "../useNowPlayingTitle";
 
 describe("claimTitle", () => {
   it("sets the title and restores the previous one", () => {
@@ -23,8 +23,16 @@ describe("claimTitle", () => {
   it("leaves a title set by the next page alone", () => {
     const doc = { title: "Home" };
     const undo = claimTitle(doc, "▶ Song");
-    doc.title = "The Rotation · Neon Palms FM";
+    doc.title = "The Rotation · Neon Palms Radio";
     undo();
-    expect(doc.title).toBe("The Rotation · Neon Palms FM");
+    expect(doc.title).toBe("The Rotation · Neon Palms Radio");
+  });
+});
+
+describe("nowPlayingTitle", () => {
+  it("names the song and the station it plays on", () => {
+    expect(
+      nowPlayingTitle({ artist: "a-ha", title: "Take On Me" }, { name: "Neon Palms", frequency: "88.6" }),
+    ).toBe("▶ a-ha – Take On Me · Neon Palms 88.6");
   });
 });

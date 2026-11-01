@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
-import { site } from "@/config/site";
+import { FAN_PROJECT_DISCLAIMER, site } from "@/config/site";
 import { useYouTubeConsent, type ConsentState } from "@/lib/consent";
 
 const LINKS = [
@@ -31,7 +31,7 @@ const STATUS: Record<ConsentState, { label: string; dot: string; detail: string 
     label: "Not decided",
     dot: "bg-muted",
     detail:
-      "Nothing is loaded from YouTube until you click “Accept & tune in” on the station.",
+      "Nothing is loaded from YouTube until you click “Accept & tune in” on the radio.",
   },
 };
 
@@ -83,13 +83,9 @@ export function SiteFooter() {
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-xl space-y-3 text-sm leading-relaxed text-muted">
             <p className="font-display text-xs tracking-[0.2em] text-hot-pink uppercase">
-              {site.name} · {site.frequency}
+              {site.name}
             </p>
-            <p>
-              {site.name} is an unofficial, non-commercial fan project. It is not affiliated
-              with, endorsed or sponsored by YouTube or Google, or by any of the artists or record
-              labels whose music it plays.
-            </p>
+            <p>{FAN_PROJECT_DISCLAIMER}</p>
             <p>
               Music videos are embedded from the official YouTube channels of the respective
               artists and labels. All rights remain with their owners.

@@ -11,9 +11,10 @@ const sans = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
 const lcd = VT323({ variable: "--font-vt323", weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Neon Palms FM — 24/7 Neon Radio from the Sunset Coast",
+  title: "Neon Palms Radio — Three Neon Stations, Live 24/7",
   description:
-    "An unofficial fan-made web radio with an 80s neon soul. Everyone hears the same song at the same time — just like real radio.",
+    "An unofficial fan-made web radio with an 80s neon soul and three stations: songs fresh from the trailers, classics from the in-game dial and pure 80s hits. Everyone on a station hears the same song at the same time — just like real radio.",
+  applicationName: "Neon Palms Radio",
 };
 
 export const viewport: Viewport = {

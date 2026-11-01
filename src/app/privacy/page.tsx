@@ -17,6 +17,7 @@ const SECTIONS = [
   { id: "controller", title: "Who is responsible" },
   { id: "hosting", title: "Hosting and server log files" },
   { id: "station-clock", title: "The station clock" },
+  { id: "station-address", title: "The station in the page address" },
   { id: "consent-storage", title: "Remembering your choice" },
   { id: "youtube", title: "The YouTube player" },
   { id: "youtube-links", title: "Links to YouTube" },
@@ -105,17 +106,39 @@ export default function PrivacyPage() {
 
       <h2 id="station-clock">The station clock</h2>
       <p>
-        {site.name} works like a real radio station: every listener hears the same song at the
-        same moment. To make that possible, your browser asks our own server for the current
-        time (the <code>/api/time</code> endpoint) when you open the station and may repeat this
-        to keep the clock in sync. The answer contains nothing but the server time and a short
-        version tag of the playlist, so a page opened before a playlist update knows it is out of
-        date.
+        {site.name} works like real radio: everyone tuned to the same station hears the same
+        song at the same moment. To make that possible, your browser asks our own server for the
+        current time (the <code>/api/time</code> endpoint) when you open the radio and may repeat
+        this to keep the clock in sync. The answer contains nothing but the server time and a
+        short version tag of the stations’ playlists, so a page opened before a playlist update
+        knows it is out of date.
       </p>
       <p>
         These requests only synchronise playback. Nothing is stored about them beyond the normal
         server log entries described above, and no third party is involved. The “now playing”
-        information you see is calculated from our own schedule, so it works without YouTube.
+        information you see for each station is calculated from our own schedule, so it works
+        without YouTube.
+      </p>
+      <p>
+        If the playlists change while the radio is open, the page may reload itself to pick up
+        the new programme. So that this happens only once, it notes the new version tag in your
+        browser’s session storage. The entry contains no personal data, is not sent to us and is
+        deleted when you close the tab. Storing it is strictly necessary for the radio to work
+        (§ 25(2) no. 2 TDDDG).
+      </p>
+
+      <h2 id="station-address">The station in the page address</h2>
+      <p>
+        When you switch stations, the page address shows the one you picked — for example{" "}
+        <code>/?station=rearview</code> — so you can bookmark it or share a link that opens the
+        same station. That is its only purpose. We do not save your choice — nothing is stored in
+        your browser for it, and nothing on our server beyond the normal log entries.
+      </p>
+      <p>
+        Like any page address, it can appear in the server log entries described above — as the
+        requested address when you open such a link, or as the referrer of requests the page
+        makes afterwards, such as to the station clock. If you have allowed the YouTube player,
+        the page address Google receives (see below) can include the station as well.
       </p>
 
       <h2 id="consent-storage">Remembering your choice</h2>
@@ -123,7 +146,9 @@ export default function PrivacyPage() {
         When you decide about the YouTube player, we save that decision in your browser’s local
         storage under the key <code>neonpalms.consent.v1</code>. It contains only your decision
         (allowed or not allowed) and the time you made it. It stays on your device and is not
-        sent to us. It is not a cookie, and we do not store anything else in your browser.
+        sent to us. It is not a cookie, and apart from the version tag described under{" "}
+        <a href="#station-clock">the station clock</a> we do not store anything else in your
+        browser.
       </p>
       <p>
         Saving it is strictly necessary to respect your choice — otherwise we would have to ask
@@ -224,8 +249,8 @@ export default function PrivacyPage() {
 
       <h2 id="youtube-links">Links to YouTube</h2>
       <p>
-        The <Link href="/rotation">Rotation</Link> page lists every song with a plain “Watch on
-        YouTube” link. Nothing is loaded from YouTube on that page. Only if you click a link
+        The <Link href="/rotation">Rotation</Link> page lists every song on every station with a
+        plain “Watch on YouTube” link. Nothing is loaded from YouTube on that page. Only if you click a link
         does your browser open YouTube’s website — from then on, Google’s privacy policy
         applies.
       </p>

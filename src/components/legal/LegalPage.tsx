@@ -16,7 +16,7 @@ const PROSE = [
   "[&_code]:rounded [&_code]:bg-dusk [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-lcd [&_code]:text-lg [&_code]:text-sunset-yellow",
 ].join(" ");
 
-/** Small neon script wordmark that links back to the station. */
+/** Small neon script wordmark ("Neon Palms" + "Radio") that links back to the radio. */
 export function StationWordmark({ className = "" }: { className?: string }) {
   return (
     <Link
@@ -24,9 +24,11 @@ export function StationWordmark({ className = "" }: { className?: string }) {
       className={`inline-flex items-baseline gap-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neon-cyan ${className}`}
     >
       <span className="font-script text-3xl leading-none text-hot-pink [text-shadow:0_0_6px_rgb(255_47_160/0.9),0_0_22px_rgb(255_47_160/0.55)] sm:text-4xl">
-        {site.name}
+        {site.wordmark}
       </span>
-      <span className="font-lcd text-xl leading-none text-sunset-yellow">{site.frequency}</span>
+      <span className="font-lcd text-xl leading-none tracking-[0.2em] text-sunset-yellow uppercase">
+        Radio
+      </span>
     </Link>
   );
 }
@@ -93,7 +95,7 @@ export function LegalPage({ eyebrow, title, lead, prose = true, children }: Lega
             href="/"
             className="font-display text-xs tracking-[0.15em] text-cream uppercase underline-offset-4 transition-colors hover:text-neon-cyan hover:underline focus-visible:text-neon-cyan"
           >
-            ← Back to the station
+            ← Back to the radio
           </Link>
         </div>
         <div

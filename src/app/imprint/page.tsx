@@ -5,7 +5,7 @@ import {
   OperatorAddress,
   PlaceholderWarning,
 } from "@/components/legal/LegalPage";
-import { site } from "@/config/site";
+import { FAN_PROJECT_DISCLAIMER, site } from "@/config/site";
 
 export const metadata: Metadata = {
   title: `Legal notice · ${site.name}`,
@@ -17,7 +17,7 @@ export default function ImprintPage() {
     <LegalPage eyebrow="Legal" title="Legal notice (Impressum)">
       <PlaceholderWarning />
 
-      {/* § 18 (1) MStV because the station is private and non-commercial. If it ever becomes a
+      {/* § 18 (1) MStV because the site is private and non-commercial. If it ever becomes a
           commercial service, § 5 DDG applies instead and needs a second direct contact channel
           (e.g. a phone number) besides email. */}
       <h2>Information according to § 18 (1) MStV</h2>
@@ -32,16 +32,12 @@ export default function ImprintPage() {
       <OperatorAddress />
 
       <h2>Fan project and rights</h2>
-      <p>
-        {site.name} is an unofficial, non-commercial fan project. It is not affiliated with,
-        endorsed or sponsored by YouTube or Google, or by any of the artists or record labels
-        whose music it plays.
-      </p>
+      <p>{FAN_PROJECT_DISCLAIMER}</p>
       <p>
         Music videos are embedded from the official YouTube channels of the respective artists
         and labels using YouTube’s embedded player. All rights to the music, videos, artist names
         and song titles remain with their owners. If you are a rights holder and would like a
-        video removed from the rotation, please email <ContactEmail /> and we will take care of
+        video removed from rotation, please email <ContactEmail /> and we will take care of
         it promptly.
       </p>
 
