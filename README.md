@@ -69,13 +69,11 @@ sequenceDiagram
     participant S as /api/time
     participant Y as YouTube player
     B->>S: 4 quick requests
-    S-->>B: server time (+ playlist fingerprint)
-    Note over B: offset = server time − local clock<br/>(the fastest round trip wins)
-    Note over B: schedule(now + offset)<br/>→ which track, how many seconds in
+    S-->>B: server time + playlist fingerprint
+    Note over B: schedule(server time) → which track, how many seconds in
     B->>Y: load the track at the live position
     loop every second
-        B->>Y: more than 2.5 s off? jump back to live
-        B->>Y: slot ended? load the next track
+        B->>Y: next slot? load it · drifted > 2.5 s? jump back to live
     end
 ```
 
