@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { RadioStatus } from "@/lib/radio/types";
+import type { Notice } from "./extras/useExtras";
 import { formatClock } from "./format";
 
 type StatusLineProps = {
@@ -8,6 +9,8 @@ type StatusLineProps = {
   remaining: number;
   /** The programme changed since this page loaded; only a reload brings it back in step with everyone. */
   stationUpdated: boolean;
+  /** Shown instead of the usual message for a moment, unless the listener has something to do */
+  notice?: Notice | null;
   onResume(): void;
   className?: string;
 };
@@ -77,10 +80,11 @@ function spokenMessage(status: RadioStatus, stationUpdated: boolean): string | n
   }
 }
 
-export function StatusLine({ status, remaining, stationUpdated, onResume, className }: StatusLineProps) {
+export function StatusLine({ status, remaining, stationUpdated, notice = null, onResume, className }: StatusLineProps) {
   const next = spokenMessage(status, stationUpdated);
   const [spoken, setSpoken] = useState(next ?? "");
   if (next !== null && next !== spoken) setSpoken(next);
+  const actionNeeded = stationUpdated || status === "needs-gesture" || status === "paused";
 
   return (
     <div
@@ -89,7 +93,14 @@ export function StatusLine({ status, remaining, stationUpdated, onResume, classN
       <p role="status" className="sr-only">
         {spoken}
       </p>
-      {stationUpdated ? (
+      <p role="status" className="sr-only">
+        {notice?.text}
+      </p>
+      {notice !== null && !actionNeeded ? (
+        <span key={notice.seq} aria-hidden="true" className="np-notice">
+          {notice.text}
+        </span>
+      ) : stationUpdated ? (
         <>
           <span>The stations have been updated.</span>
           {/* Never reloaded automatically: that would drop the click that lets the music play with sound. */}

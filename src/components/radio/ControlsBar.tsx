@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { RadioStatus } from "@/lib/radio/types";
+import type { Notice } from "./extras/useExtras";
 import { PowerButton } from "./PowerButton";
 import { StatusLine } from "./StatusLine";
 import { VolumeControl } from "./VolumeControl";
@@ -10,6 +11,8 @@ type ControlsBarProps = {
   muted: boolean;
   remaining: number;
   stationUpdated: boolean;
+  /** Short confirmation shown in the status line for a moment */
+  notice?: Notice | null;
   onPower(): void;
   onResume(): void;
   onVolume(volume: number): void;
@@ -24,6 +27,7 @@ export function ControlsBar({
   muted,
   remaining,
   stationUpdated,
+  notice = null,
   onPower,
   onResume,
   onVolume,
@@ -50,6 +54,7 @@ export function ControlsBar({
         status={status}
         remaining={remaining}
         stationUpdated={stationUpdated}
+        notice={notice}
         onResume={onResume}
         className="[grid-area:status]"
       />

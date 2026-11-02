@@ -15,6 +15,8 @@ import { useRadio } from "@/hooks/useRadio";
 import { useYouTubeConsent } from "@/lib/consent";
 import { ConsentCard } from "./ConsentCard";
 import { ControlsBar } from "./ControlsBar";
+import { Hud } from "./extras/Hud";
+import { useExtras } from "./extras/useExtras";
 import { NowPlaying } from "./NowPlaying";
 import { RadioSet } from "./RadioSet";
 import { StationHeader } from "./StationHeader";
@@ -46,6 +48,8 @@ function keepFocus(target: RefObject<HTMLButtonElement | null>): void {
 /** The radio page's interactive part. Owns the single useRadio() instance. */
 export function RadioApp({ scenery }: RadioAppProps) {
   const radio = useRadio();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const extras = useExtras(rootRef);
   const { consent, grant, deny } = useYouTubeConsent();
   const acceptRef = useRef<HTMLButtonElement>(null);
   const powerRef = useRef<HTMLButtonElement>(null);
@@ -139,6 +143,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
     if (next === undefined || next.id === station.id) return;
     // First thing in the gesture: tuned in, the new station's video may only start from inside it.
     setStation(next.id);
+    extras.onSwitch();
     const reducedMotion = prefersReducedMotion();
     if (!off) playStaticBurst(staticPeakGain(radio.volume, radio.muted, reducedMotion));
     startTuning(!reducedMotion);
@@ -165,6 +170,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
 
   return (
     <div
+      ref={rootRef}
       className="np-radio flex flex-1 flex-col"
       data-station={station.id}
       data-switched={tuneEvent !== null}
@@ -175,6 +181,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
         station={station}
         listeners={presence?.total ?? null}
         onCountdownTune={() => switchStation(COUNTDOWN.stationId)}
+        hud={<Hud wanted={extras.wanted} money={extras.money} />}
       />
       <main id="main" className="np-container np-main flex-1 pb-14 lg:pb-20">
         {scenery}
@@ -190,6 +197,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
               muted={radio.muted}
               remaining={remaining}
               stationUpdated={radio.stationUpdated}
+              notice={extras.notice}
               onPower={pressPower}
               onResume={resumeLive}
               onVolume={radio.setVolume}
@@ -204,7 +212,10 @@ export function RadioApp({ scenery }: RadioAppProps) {
               onAir={radio.onAir}
               listeners={presence?.stations ?? null}
               announcement={announcement.stationId === station.id ? announcement.text : ""}
-              onSelect={switchStation}
+              onSelect={(id) => {
+                switchStation(id);
+                extras.onPresetPress(stations.findIndex((item) => item.id === id));
+              }}
             />
           }
         />

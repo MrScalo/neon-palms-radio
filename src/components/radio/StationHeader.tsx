@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { COUNTDOWN } from "@/config/countdown";
 import type { Station } from "@/lib/radio/types";
 import { CountdownChip } from "./CountdownChip";
@@ -12,14 +13,19 @@ type StationHeaderProps = {
   listeners: number | null;
   /** Switches to the countdown's station, like pressing its preset */
   onCountdownTune(): void;
+  /** Drawn under the live pill */
+  hud?: ReactNode;
 };
 
-export function StationHeader({ live, station, listeners, onCountdownTune }: StationHeaderProps) {
+export function StationHeader({ live, station, listeners, onCountdownTune, hud }: StationHeaderProps) {
   return (
     <header className="np-container grid h-(--header-h) grid-cols-[minmax(0,1fr)_auto] content-center items-center gap-x-6 gap-y-2 pt-3 sm:pt-0">
       <div className="col-span-2 flex items-center justify-between gap-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:flex-col sm:items-end sm:gap-2 lg:flex-row lg:items-center lg:gap-3">
         <OnAirLamp />
-        <LivePill live={live} listeners={listeners} />
+        <div className="relative">
+          <LivePill live={live} listeners={listeners} />
+          {hud}
+        </div>
       </div>
 
       <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-1 sm:row-start-1">

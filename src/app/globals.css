@@ -943,6 +943,81 @@ body {
   }
 }
 
+/* --- Hidden extras (src/components/radio/extras) ------------------------------------------------ */
+
+@layer components {
+  /* Everything in pink, until it is switched off again. */
+  .np-stage[data-pink] {
+    --color-neon-cyan: var(--color-hot-pink);
+    --color-violet: var(--color-neon-pink);
+    --color-sunset-orange: #ff5fb4;
+    --color-sunset-yellow: #ffb8e2;
+  }
+
+  .np-stage[data-pink] .np-radio {
+    --station-accent: var(--color-hot-pink) !important;
+  }
+
+  .np-stage[data-pink] .np-preset {
+    --preset-accent: var(--color-hot-pink) !important;
+  }
+
+  .np-stage[data-pink] .np-countdown {
+    --countdown-accent: var(--color-hot-pink) !important;
+  }
+
+  .np-countdown[data-gag="delayed"] {
+    --countdown-accent: var(--color-on-air) !important;
+  }
+
+  .np-notice {
+    font-family: var(--font-lcd);
+    font-size: 1.25rem;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-sunset-yellow);
+    text-shadow: 0 0 10px color-mix(in oklab, var(--color-sunset-yellow) 55%, transparent);
+  }
+
+  .np-hud-money {
+    font-family: var(--font-lcd);
+    font-size: 1.25rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: #6dff9b;
+    text-shadow:
+      0 0 10px rgb(109 255 155 / 0.55),
+      0 1px 0 #0b0618;
+  }
+
+  /* On phones the wordmark reaches under the live pill: three stars to a row keep clear of it. */
+  .np-hud-stars {
+    --star: 0.9375rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: calc(3 * var(--star) + 2 * 0.125rem);
+    color: var(--color-cream);
+    filter: drop-shadow(0 0 6px rgb(255 244 230 / 0.55)) drop-shadow(0 1px 0 #0b0618);
+  }
+
+  .np-hud-star {
+    width: var(--star);
+    height: var(--star);
+  }
+
+  @media (width >= 40rem) {
+    .np-hud-money {
+      font-size: 1.5rem;
+    }
+
+    .np-hud-stars {
+      --star: 1.125rem;
+      max-width: none;
+    }
+  }
+}
+
 /* Motion lives only here, so prefers-reduced-motion gets a completely still page. */
 @media (prefers-reduced-motion: no-preference) {
   .np-floor-lines {
@@ -1044,10 +1119,35 @@ body {
   .np-ticker[data-paused="true"] .np-marquee-track {
     animation-play-state: paused;
   }
+
+  .np-notice,
+  .np-hud-money {
+    animation: np-swap-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .np-hud-star {
+    animation: np-star-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .np-countdown[data-gag] {
+    animation: np-glitch 0.18s steps(2, jump-none) 3;
+  }
+
+  .np-stage[data-flare] .np-sun-anchor {
+    animation: np-flare 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .np-stage[data-flare] .np-scene {
+    animation: np-quake 0.6s linear;
+  }
 }
 
 /* Without motion the bulletin strip can be scrolled by hand instead. */
 @media (prefers-reduced-motion: reduce) {
+  .np-stage[data-flare] .np-sun-anchor {
+    filter: brightness(1.6);
+  }
+
   .np-marquee {
     overflow-x: auto;
     mask-image: none;
@@ -1169,5 +1269,44 @@ body {
 @keyframes np-marquee {
   to {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes np-star-in {
+  from {
+    opacity: 0;
+    scale: 1.8;
+  }
+}
+
+@keyframes np-glitch {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* The sun blazes up for a moment. */
+@keyframes np-flare {
+  15% {
+    filter: brightness(2.4) saturate(1.3) drop-shadow(0 0 2.5rem var(--color-sunset-yellow));
+    scale: 1.12;
+  }
+}
+
+@keyframes np-quake {
+  20% {
+    translate: -0.375rem 0.25rem;
+  }
+  40% {
+    translate: 0.375rem -0.25rem;
+  }
+  60% {
+    translate: -0.25rem 0;
+  }
+  80% {
+    translate: 0.25rem 0.125rem;
   }
 }
