@@ -9,6 +9,7 @@ import { FAN_PROJECT_DISCLAIMER, site } from "@/config/site";
 
 export const metadata: Metadata = {
   title: `Legal notice · ${site.name}`,
+  robots: { index: false, follow: true },
   description: `Legal notice (Impressum) of ${site.name}, an unofficial, non-commercial fan project.`,
 };
 

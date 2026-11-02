@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Audiowide, Mr_Dafoe, Outfit, VT323 } from "next/font/google";
+import { KEYWORDS, STATION_SEO } from "@/config/seo";
 import { site } from "@/config/site";
+import { DEFAULT_STATION_ID } from "@/config/stations";
 import "./globals.css";
 
 // next/font downloads these at build time and serves them from our own domain,
@@ -11,12 +13,27 @@ const display = Audiowide({ variable: "--font-audiowide", weight: "400", subsets
 const sans = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
 const lcd = VT323({ variable: "--font-vt323", weight: "400", subsets: ["latin"] });
 
+const HOME = STATION_SEO[DEFAULT_STATION_ID];
+
+// Defaults for every page; pages set their own title, description and canonical address (src/lib/seo/metadata.ts).
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: "Neon Palms Radio — Three Neon Stations, Live 24/7",
-  description:
-    "An unofficial fan-made web radio with an 80s neon soul and three stations: songs fresh from the trailers, classics from the in-game dial and pure 80s hits. Everyone on a station hears the same song at the same time — just like real radio.",
-  applicationName: "Neon Palms Radio",
+  title: { default: HOME.title, template: `%s · ${site.name}` },
+  description: HOME.description,
+  applicationName: site.name,
+  keywords: [...KEYWORDS],
+  authors: [{ name: site.operator.name }],
+  creator: site.operator.name,
+  publisher: site.name,
+  category: "music",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  openGraph: { type: "website", siteName: site.name, locale: "en_US" },
+  twitter: { card: "summary_large_image" },
+  formatDetection: { telephone: false, address: false, email: false },
 };
 
 export const viewport: Viewport = {

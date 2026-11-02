@@ -15,7 +15,7 @@ export type Track = {
    * verify-videos.mjs accepts a missing badge only with this note.
    */
   officialNote?: string;
-  /** Short, discreet note on where the song was heard, e.g. "Trailer 2 · 2025" or "In-game radio · 2002". */
+  /** Where the song was heard, e.g. "GTA VI · Trailer 2 · 2025" or "GTA Vice City · 2002" (formats: README). */
   heardIn?: string;
 };
 
@@ -23,12 +23,14 @@ export type Track = {
 export type Station = {
   /** URL-safe id, also the data file name in src/data/stations/ */
   id: string;
+  /** Path segment of the station's own page (/<slug>); the default station lives at / instead. */
+  slug: string;
   name: string;
   /** Dial frequency in MHz, e.g. "107.7" */
   frequency: string;
   /** Short, catchy line shown on the preset button */
   tagline: string;
-  /** One or two discreet sentences on what kind of songs the station plays */
+  /** One or two sentences on what kind of songs the station plays (rotation page, structured data) */
   description: string;
   /** Accent colour of the station (any CSS colour) */
   accent: string;

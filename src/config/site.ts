@@ -30,7 +30,7 @@ export const site = {
 } as const;
 
 /** Shown in the footer and the legal notice. */
-export const FAN_PROJECT_DISCLAIMER = `${site.name} is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or sponsored by any video game publisher or developer, by YouTube or Google, or by any of the artists or record labels whose music it plays.`;
+export const FAN_PROJECT_DISCLAIMER = `${site.name} is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive, by YouTube or Google, or by any of the artists or record labels whose music it plays. Grand Theft Auto, GTA and Rockstar Games are trademarks of their respective owners and are named here only to describe the music.`;
 
 export function isPlaceholder(value: string): boolean {
   return /^\[.*\]$/.test(value.trim());

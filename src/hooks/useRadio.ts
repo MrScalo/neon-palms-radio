@@ -48,7 +48,6 @@ export type Radio = {
 };
 
 const UPCOMING_COUNT = 3;
-const DEFAULT_STATION = getStation(DEFAULT_STATION_ID);
 const RELOADED_FOR_KEY = "neonpalms.reloadedFor";
 
 /** Reloads into the new programme, at most once per server schedule so stale cached HTML can't cause a reload loop. */
@@ -65,8 +64,11 @@ function reloadForNewSchedule(): void {
   window.location.reload();
 }
 
-/** The network: shared schedules, the selected station, live position and the YouTube player. Use exactly once. */
-export function useRadio(): Radio {
+/**
+ * The network: shared schedules, the selected station, live position and the YouTube player. Use
+ * exactly once. `initialStationId` is the station the page was rendered for.
+ */
+export function useRadio(initialStationId: string = DEFAULT_STATION_ID): Radio {
   const { consent } = useYouTubeConsent();
   const now = useStationNow(1000);
   const stationUpdated = useScheduleOutdated();
@@ -74,8 +76,8 @@ export function useRadio(): Radio {
   const [status, setStatus] = useState<RadioStatus>("off");
   const [volume, setVolumeState] = useState(DEFAULT_VOLUME);
   const [muted, setMutedState] = useState(false);
-  const [station, setStationState] = useState(DEFAULT_STATION);
-  const [engine] = useState(() => new RadioEngine(setStatus, { station: DEFAULT_STATION }));
+  const [station, setStationState] = useState(() => getStation(initialStationId));
+  const [engine] = useState(() => new RadioEngine(setStatus, { station }));
 
   // Consent withdrawn (here, in the footer or in another tab): YouTube has to go immediately.
   useEffect(() => {

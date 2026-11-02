@@ -21,7 +21,7 @@ import { NowPlaying } from "./NowPlaying";
 import { RadioSet } from "./RadioSet";
 import { StationHeader } from "./StationHeader";
 import { playStaticBurst, staticPeakGain } from "./staticBurst";
-import { reconcileAddress, withStationParam } from "./stationUrl";
+import { reconcileAddress, stationPath, withStationPath } from "./stationUrl";
 import { Tuner } from "./Tuner";
 import { TuneInCard } from "./TuneInCard";
 import { UpNext } from "./UpNext";
@@ -30,6 +30,8 @@ import { usePresence } from "./usePresence";
 import { prefersReducedMotion, useTuning } from "./useTuning";
 
 type RadioAppProps = {
+  /** The station this page is for: the default station at /, the others on their own page. */
+  stationId?: string;
   /** Decorative sun window, rendered on the server and slotted into the grid. */
   scenery?: ReactNode;
 };
@@ -46,8 +48,8 @@ function keepFocus(target: RefObject<HTMLButtonElement | null>): void {
 }
 
 /** The radio page's interactive part. Owns the single useRadio() instance. */
-export function RadioApp({ scenery }: RadioAppProps) {
-  const radio = useRadio();
+export function RadioApp({ stationId = DEFAULT_STATION_ID, scenery }: RadioAppProps) {
+  const radio = useRadio(stationId);
   const rootRef = useRef<HTMLDivElement>(null);
   const extras = useExtras(rootRef);
   const { consent, grant, deny } = useYouTubeConsent();
@@ -68,21 +70,20 @@ export function RadioApp({ scenery }: RadioAppProps) {
   useNowPlayingTitle(playing && current ? current.track : null, station);
   const presence = usePresence(station.id);
 
-  // The server always renders the default station, and Next keeps this page alive (hidden) while
-  // the listener is on another page. So on first load and every time the page shows again, line the
-  // station up with the address: a link or Back/Forward naming a station wins; a bare "/" gets the
-  // kept station written back. Hiding the page tuned out, so no gesture is needed here.
+  // Next keeps this page alive (hidden) while the listener is on another page, and switching
+  // stations only rewrites the address. So on first load and every time the page shows again, line
+  // the station up with the address: an old ?station= link or a station page (Back/Forward) wins; a
+  // bare "/" gets the kept station's page written back. Hiding the page tuned out, so no gesture is
+  // needed here.
   const syncWithAddress = useEffectEvent(() => {
-    const action = reconcileAddress(window.location.search, stations, station.id, DEFAULT_STATION_ID);
+    const action = reconcileAddress(window.location, stations, station.id, DEFAULT_STATION_ID);
     if (action === null) return;
-    if ("select" in action) {
-      setStation(action.select);
-      return;
-    }
+    if (action.select !== undefined) setStation(action.select);
+    if (action.writePath === undefined) return;
     try {
-      window.history.replaceState(null, "", withStationParam(window.location.href, action.writeParam));
+      window.history.replaceState(null, "", withStationPath(window.location.href, action.writePath));
     } catch {
-      // The link is a convenience.
+      // The address is a convenience.
     }
   });
 
@@ -155,7 +156,7 @@ export function RadioApp({ scenery }: RadioAppProps) {
         : `Now on ${next.name}, ${next.frequency} FM.`,
     });
     try {
-      window.history.replaceState(null, "", withStationParam(window.location.href, next.id));
+      window.history.replaceState(null, "", withStationPath(window.location.href, stationPath(next, DEFAULT_STATION_ID)));
     } catch {
       // Browsers throttle history updates when keys are held down; the link is a convenience.
     }

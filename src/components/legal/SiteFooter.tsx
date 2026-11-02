@@ -6,6 +6,7 @@ import { FAN_PROJECT_DISCLAIMER, site } from "@/config/site";
 import { useYouTubeConsent, type ConsentState } from "@/lib/consent";
 
 const LINKS = [
+  { href: "/about", label: "About" },
   { href: "/rotation", label: "Rotation" },
   { href: "/privacy", label: "Privacy" },
   { href: "/imprint", label: "Legal notice" },

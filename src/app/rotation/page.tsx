@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import { LegalPage } from "@/components/legal/LegalPage";
+import { stationPath } from "@/components/radio/stationUrl";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { site } from "@/config/site";
-import { STATIONS } from "@/config/stations";
+import { DEFAULT_STATION_ID, STATIONS } from "@/config/stations";
 import type { Station, Track } from "@/lib/radio/types";
+import { pageMetadata } from "@/lib/seo/metadata";
+import { rotationGraph } from "@/lib/seo/structuredData";
 
-export const metadata: Metadata = {
-  title: `The Rotation · ${site.name}`,
-  description: `Every song on every ${site.name} station, all official uploads by the artists and labels.`,
+const PAGE = {
+  path: "/rotation",
+  title: `GTA 6 Trailer Songs & GTA Radio Tracklist · ${site.name}`,
+  description:
+    "Every song on Neon Palms Radio: all songs from the GTA VI trailers, 80s hits from the GTA Vice City, San Andreas and GTA V radio, plus pure 80s classics.",
 };
+
+export const metadata: Metadata = pageMetadata(PAGE, PAGE.path);
 
 const STAT_LABEL = "font-display text-[0.65rem] tracking-[0.2em] text-muted uppercase";
 
@@ -137,6 +146,14 @@ function StationSection({ station }: { station: Station }) {
       </h2>
       <p className="mt-2 font-display text-sm tracking-wide text-(--accent)">{station.tagline}</p>
       <p className="mt-3 max-w-2xl leading-relaxed text-cream/90">{station.description}</p>
+      <p className="mt-3">
+        <Link
+          href={stationPath(station, DEFAULT_STATION_ID)}
+          className="font-display text-xs tracking-[0.15em] text-(--accent) uppercase underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon-cyan"
+        >
+          Listen live on {station.name} →
+        </Link>
+      </p>
 
       <dl className="mt-6 flex flex-wrap gap-3">
         <div className="rounded-lg border border-plum bg-dusk px-4 py-2">
@@ -174,10 +191,11 @@ export default function RotationPage() {
       lead={
         <>
           <p>
-            Every song on {site.name}. Three stations, each with its own shuffled rotation: a
-            station plays its whole list, then shuffles it into a different order for the next
-            cycle — and everyone on the same station hears the same song at the same time, just
-            like real radio.
+            Every song on {site.name}: the songs from the GTA VI trailers, 80s hits from the radio
+            of earlier GTA games and pure 80s classics. Three stations, each with its own shuffled
+            rotation: a station plays its whole list, then shuffles it into a different order for
+            the next cycle — and everyone on the same station hears the same song at the same
+            time, just like real radio.
           </p>
           <p className="mt-3 text-base">
             All videos are official uploads by the artists or their labels. The links below
@@ -186,6 +204,7 @@ export default function RotationPage() {
         </>
       }
     >
+      <JsonLd data={rotationGraph(STATIONS, PAGE)} />
       <StationPresets />
       {STATIONS.map((station) => (
         <StationSection key={station.id} station={station} />

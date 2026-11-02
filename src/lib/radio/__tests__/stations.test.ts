@@ -34,12 +34,13 @@ describe("STATIONS", () => {
     }
   });
 
-  it("keep heardIn to the discreet formats from the README", () => {
+  it("keep heardIn to the formats from the README", () => {
+    const game = "(GTA Vice City|GTA Vice City Stories|GTA San Andreas|GTA IV|GTA IV: The Ballad of Gay Tony|GTA V)";
     // Every station needs an entry; null means the station has no heardIn notes at all.
     const formats: Record<string, RegExp | null> = {
       heatwave:
-        /^(Trailer 1|Trailer 2|Launch trailer|Extended look|Teaser|Radio preview|Official album|Original score|Official playlist) · \d{4}$/,
-      rearview: /^In-game radio · \d{4}(, \d{4})*$/,
+        /^GTA VI · (Trailer 1|Trailer 2|Launch trailer|Extended look|Teaser|Radio preview|Official album|Original score|Official playlist) · \d{4}$/,
+      rearview: new RegExp(`^${game}( & ${game})* · \\d{4}(, \\d{4})*$`),
       neonpalms: null,
     };
     for (const station of STATIONS) {

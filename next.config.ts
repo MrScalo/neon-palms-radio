@@ -40,6 +40,8 @@ const nextConfig: NextConfig = {
         destination: "https://neonpalms.de/:path*",
         permanent: true,
       },
+      // The default station's page is the home page (src/app/[station]/page.tsx).
+      { source: "/heatwave", destination: "/", permanent: true },
     ];
   },
   async headers() {

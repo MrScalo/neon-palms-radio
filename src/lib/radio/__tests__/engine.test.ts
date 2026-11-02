@@ -192,7 +192,7 @@ function track(id: string, artist: string, duration: number): Track {
 }
 
 function station(id: string, tracks: Track[]): Station {
-  return { id, name: id, frequency: "88.6", tagline: "", description: "", accent: "#ff2fa0", tracks };
+  return { id, slug: id, name: id, frequency: "88.6", tagline: "", description: "", accent: "#ff2fa0", tracks };
 }
 
 const HOME = station("home", [

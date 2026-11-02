@@ -16,7 +16,7 @@ function track(id: string, artist: string, duration: number): Track {
 }
 
 function station(id: string, tracks: Track[]): Station {
-  return { id, name: `Station ${id}`, frequency: "88.6", tagline: "", description: "", accent: "#ff2fa0", tracks };
+  return { id, slug: id, name: `Station ${id}`, frequency: "88.6", tagline: "", description: "", accent: "#ff2fa0", tracks };
 }
 
 /** Ten tracks, with artists A (x3) and B (x2) repeated so adjacency has to be actively avoided. */

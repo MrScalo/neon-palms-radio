@@ -10,6 +10,7 @@ import { site } from "@/config/site";
 
 export const metadata: Metadata = {
   title: `Privacy Policy · ${site.name}`,
+  robots: { index: false, follow: true },
   description: `How ${site.name} handles your data: no analytics, ads or tracking of our own, and YouTube only after you say yes.`,
 };
 
@@ -196,8 +197,8 @@ export default function PrivacyPage() {
       <h2 id="station-address">The station in the page address</h2>
       <p>
         When you switch stations, the page address shows the one you picked — for example{" "}
-        <code>/?station=rearview</code> — so you can bookmark it or share a link that opens the
-        same station. That is its only purpose. We do not save your choice — nothing is stored in
+        <code>/rearview</code> — so you can bookmark it or share a link that opens the same
+        station. That is its only purpose. We do not save your choice — nothing is stored in
         your browser for it, and nothing on our server beyond the normal log entries.
       </p>
       <p>

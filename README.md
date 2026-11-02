@@ -4,7 +4,8 @@
 
 **Three stations. One endless summer.** · 107.7 · 85.5 · 88.6
 
-An unofficial fan web radio with an 80s neon-sunset soul: three stations, one tap apart.<br>
+An unofficial GTA 6 fan web radio with an 80s neon-sunset soul: the songs from the GTA VI trailers,<br>
+80s hits from the GTA radio dial and pure 80s — three stations, one tap apart.<br>
 Everyone on the same station hears the same song at the same moment — just like real radio.
 
 [![CI](https://github.com/MrScalo/neon-palms-radio/actions/workflows/ci.yml/badge.svg)](https://github.com/MrScalo/neon-palms-radio/actions/workflows/ci.yml)
@@ -35,12 +36,14 @@ at the same second, as everyone else on that station.
 
 | Preset | Station        | Dial  | What's on                                                                                                                                                                                      |
 | :----: | -------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   1    | **Heatwave**   | 107.7 | _Fresh from the trailers._ Songs officially revealed so far for the most anticipated return to the neon coast — from trailers, first looks and radio previews to the official album and score. |
-|   2    | **Rearview**   | 85.5  | _Classics from the in-game dial._ Eighties cuts that once played on the car radios of a legendary open-world crime saga — from the neon coast to the West Coast.                               |
-|   3    | **Neon Palms** | 88.6  | _Pure 80s. No strings attached._ No game history, no cameos — just the decade's biggest hits with the same sunset feeling.                                                                     |
+| Preset | Station        | Dial  | Page                                         | What's on                                                                                                                |
+| :----: | -------------- | ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+|   1    | **Heatwave**   | 107.7 | [`/`](https://neonpalms.de)                  | Every song officially revealed so far for GTA VI — trailers, extended look, radio previews, the official album and score. |
+|   2    | **Rearview**   | 85.5  | [`/rearview`](https://neonpalms.de/rearview)     | 80s hits from the in-game radio of GTA Vice City, Vice City Stories, San Andreas, GTA IV and GTA V.                     |
+|   3    | **Neon Palms** | 88.6  | [`/neon-palms`](https://neonpalms.de/neon-palms) | No game history, no cameos — just the decade's biggest hits with the same Vice City sunset feeling.                      |
 
-Heatwave is the default station. Songs on the first two can carry a discreet note on where they were
-heard — _Trailer 2 · 2025_, _In-game radio · 2002, 2006_ — shown with the song.
+Heatwave is the default station. Songs on the first two carry a note on where they were heard —
+_GTA VI · Trailer 2 · 2025_, _GTA Vice City · 2002_ — shown with the song.
 
 <table>
 <tr>
@@ -124,8 +127,9 @@ sequenceDiagram
   you wherever that station is now — not where you left it.
 - Tuned in, picking a preset loads that station's live position into the same player right away,
   inside your click, so the browser keeps the sound on. Tuned out, it only changes the selection.
-- The address shows the selected station (`/?station=rearview`) so links can be shared. Nothing is
-  stored; an unknown station falls back to Heatwave.
+- Every station has its own page — `/` for Heatwave, `/rearview`, `/neon-palms` — with its own title
+  and preview image. Switching rewrites the address without reloading, so links can be shared;
+  nothing is stored. Old `/?station=…` links still open the right station and move to its page.
 
 ## Listener count
 
@@ -192,7 +196,7 @@ one day it shows just `hh:mm:ss`. Clicking it tunes to Heatwave, exactly like it
 | Requests              | Our own server only                                                                     | + `www.youtube.com` (IFrame API script) and `www.youtube-nocookie.com` (player), which in turn loads the video, images and possibly ads from other Google servers |
 | Cookies               | None                                                                                    | YouTube may set its own cookies                                                                                                                                   |
 | Stored on your device | Nothing — after _Not now_, only that choice in `localStorage` (`neonpalms.consent.v1`)¹ | Your choice in `localStorage` (`neonpalms.consent.v1`)¹                                                                                                           |
-| Selected station      | Only in the page address (`?station=…`)                                                 | Only in the page address (`?station=…`)                                                                                                                           |
+| Selected station      | Only in the page address (`/rearview`)                                                  | Only in the page address (`/rearview`)                                                                                                                            |
 | Listener count        | Station id to our own server every 30 s while the tab is visible — no ID, no cookie     | Station id to our own server every 30 s while the tab is visible — no ID, no cookie                                                                               |
 | Fonts                 | Self-hosted via `next/font`                                                             | Self-hosted via `next/font`                                                                                                                                       |
 
@@ -253,7 +257,10 @@ Then open <http://localhost:3000>.
 ```text
 src/
 ├── app/
-│   ├── page.tsx                 # the radio
+│   ├── page.tsx                 # the radio on the default station
+│   ├── [station]/               # the radio on another station (/rearview, /neon-palms)
+│   ├── about/                   # about + FAQ
+│   ├── sitemap.ts · robots.ts · manifest.ts · opengraph-image.tsx · llms.txt/
 │   ├── api/time/route.ts        # station clock (dynamic, never cached)
 │   ├── api/presence/route.ts    # listener count: one ping per visible tab and 30-s window
 │   ├── rotation/                # every station's tracks with links to the official videos
@@ -265,6 +272,7 @@ src/
 │   └── legal/                   # footer with privacy settings, legal page layout
 ├── config/
 │   ├── countdown.ts             # countdown chip: target day, labels, station it tunes to
+│   ├── seo.ts                   # page titles, descriptions, keywords, facts about the game
 │   ├── site.ts                  # network name + operator details
 │   └── stations.ts              # the stations: name, dial, tagline, description, accent colour
 ├── data/stations/<id>.json      # each station's tracks
@@ -272,6 +280,7 @@ src/
 └── lib/
     ├── consent.ts               # consent store (synced across tabs)
     ├── presence/                # listener count: protocol, ping handler, Redis and in-memory store
+    ├── seo/                     # metadata, structured data, FAQ/llms.txt facts, preview images
     └── radio/
         ├── schedule.ts          # deterministic programme per station
         ├── clock.ts             # server clock offset
@@ -298,13 +307,15 @@ scripts/verify-videos.mjs        # checks uploads: channel, length, embeddable, 
    ```
    - `duration` must equal `lengthSeconds` **exactly** — it drives the shared schedule.
    - `channel` must equal the uploader exactly — it's shown as the official-upload credit.
-   - `heardIn` is a short, discreet note on where the song was heard:
-     - **heatwave:** `"<source> · <year>"`, where the source is one of `Trailer 1`, `Trailer 2`,
-       `Launch trailer`, `Extended look`, `Teaser`, `Radio preview`, `Official album`,
-       `Original score` or `Official playlist` — e.g. `"Trailer 2 · 2025"`.
-     - **rearview:** `"In-game radio · <years>"` — e.g. `"In-game radio · 2002, 2006"`. The years are
-       the release years of the games whose radio played the song; a song added to a game later still
-       gets that game's year.
+   - `heardIn` is a short note on where the song was heard:
+     - **heatwave:** `"GTA VI · <source> · <year>"`, where the source is one of `Trailer 1`,
+       `Trailer 2`, `Launch trailer`, `Extended look`, `Teaser`, `Radio preview`, `Official album`,
+       `Original score` or `Official playlist` — e.g. `"GTA VI · Trailer 2 · 2025"`. Trailer songs
+       also show up in the FAQ automatically.
+     - **rearview:** `"<games> · <years>"` — e.g. `"GTA Vice City · 2002"` or
+       `"GTA Vice City & GTA V · 2002, 2013"`, with the games `GTA Vice City`, `GTA San Andreas`,
+       `GTA Vice City Stories`, `GTA IV`, `GTA IV: The Ballad of Gay Tony` and `GTA V`. The years are
+       the release years of those games; a song added to a game later still gets that game's year.
      - **neonpalms:** leave it out.
    - Add `officialNote` whenever YouTube shows no badge for an official upload (a label channel, an
      unmerged VEVO channel, the artist's own unbadged channel, or a joint upload that hides the badge),
@@ -347,13 +358,28 @@ Any other host works too as long as it runs Node.js (`npm run build` + `npm star
 - [ ] After deploying, check that the security headers are served and the player still starts.
 - [ ] Run `npm run verify:playlist`.
 
+## Search engines and AI assistants
+
+- **One page per station** with its own title, description, canonical address and preview image
+  (`src/config/seo.ts`, `src/lib/seo/metadata.ts`, `opengraph-image.tsx`).
+- **Structured data** (schema.org JSON-LD): the site, each station as a `RadioBroadcastService`, the
+  game and series it is about, every station's playlist on `/rotation` and the FAQ on `/about`.
+- **`/sitemap.xml`, `/robots.txt`** (AI crawlers welcome by name; `/api/` is off limits so crawlers
+  that run the page aren't counted as listeners) and **`/llms.txt` · `/llms-full.txt`** — a Markdown
+  summary for AI assistants, generated from the station data like the FAQ.
+- Privacy and legal notice are `noindex`.
+
+After deploying, add the domain to Google Search Console and Bing Webmaster Tools and submit
+`https://neonpalms.de/sitemap.xml`.
+
 ## Disclaimer
 
 Neon Palms Radio is an unofficial, non-commercial fan project. It is not affiliated with, endorsed or
-sponsored by any video game publisher or developer, by YouTube or Google, or by any of the artists or
-record labels whose music it plays. Its look is an original homage to the neon-and-sunset aesthetics of
-the 1980s; station names, descriptions and artwork are original, and it uses no logos or artwork from
-any game.
+sponsored by Rockstar Games or Take-Two Interactive, by YouTube or Google, or by any of the artists or
+record labels whose music it plays. Grand Theft Auto, GTA and Rockstar Games are trademarks of their
+respective owners and are named only to describe the music. Its look is an original homage to the
+neon-and-sunset aesthetics of the 1980s; station names, descriptions and artwork are original, and it
+uses no logos or artwork from any game.
 
 This repository contains no music or video files. All music videos are played from the official
 YouTube channels of the respective artists and labels through YouTube's embedded player; all rights
