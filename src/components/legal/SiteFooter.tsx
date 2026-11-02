@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
+import { InstagramIcon } from "@/components/radio/icons";
 import { FAN_PROJECT_DISCLAIMER, site } from "@/config/site";
 import { useYouTubeConsent, type ConsentState } from "@/lib/consent";
 
@@ -172,9 +173,20 @@ export function SiteFooter() {
           </p>
         </section>
 
-        <p className="text-xs text-muted/80">
-          © {year} {site.name} · A fan project · No ads, tracking or cookies of our own.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-muted/80">
+          <p>© {year} {site.name} · A fan project · No ads, tracking or cookies of our own.</p>
+          <a
+            href={site.instagram.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-hot-pink focus-visible:text-hot-pink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon-cyan"
+          >
+            <InstagramIcon className="size-4" />
+            <span className="sr-only">Instagram: </span>
+            {site.instagram.handle}
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </div>
       </div>
     </footer>
   );

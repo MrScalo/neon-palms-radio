@@ -76,3 +76,13 @@ export function PlayIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function InstagramIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.1" cy="6.9" r="0.4" fill="currentColor" />
+    </Icon>
+  );
+}

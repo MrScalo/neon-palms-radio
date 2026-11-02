@@ -24,6 +24,7 @@ function websiteNode() {
     alternateName: [site.wordmark, `${site.wordmark} FM`, new URL(site.url).host],
     description: STATION_SEO[DEFAULT_STATION_ID].description,
     inLanguage: "en",
+    sameAs: [site.instagram.url],
   };
 }
 

@@ -130,6 +130,7 @@ export function llmsText(full: boolean): string {
     `- GTA VI release date: ${RELEASE} (set in ${GAME.setting}, home of Vice City)`,
     "- Music: official YouTube uploads by the artists and labels, in YouTube's privacy-enhanced player after consent",
     "- Free, no account, no ads, no tracking",
+    `- Instagram: [${site.instagram.handle}](${site.instagram.url})`,
     "",
     "## Stations",
     "",

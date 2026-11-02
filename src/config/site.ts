@@ -12,6 +12,8 @@ export const site = {
   url: "https://neonpalms.de",
   /** The neon script part of the logo; the logo adds "Radio" next to it. */
   wordmark: "Neon Palms",
+  /** The network's own social account, linked in the footer and in the structured data. */
+  instagram: { handle: "@neonpalms.fm", url: "https://www.instagram.com/neonpalms.fm/" },
   operator: {
     name: "Nico Peitz",
     street: "Mettlerkampsweg 28",
